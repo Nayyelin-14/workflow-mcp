@@ -44,3 +44,5 @@ runs:
       if: steps.cache-prisma.outputs.cache-hit != 'true'
       run: npx prisma generate
       shell: bash
+      env:
+        DATABASE_URL: mongodb://dummy/dummy
