@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-// import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 export type WorkflowType = {
@@ -49,8 +48,6 @@ type wrokFlowPayload = {
   description?: string;
 };
 export const useCreateWorkFlow = () => {
-  //   const router = useRouter();
-
   return useMutation({
     mutationFn: async ({ name, description }: wrokFlowPayload) =>
       axios
@@ -58,7 +55,6 @@ export const useCreateWorkFlow = () => {
         .then((res) => res.data),
     onSuccess: (data) => {
       toast.success("Workflow created successfully");
-      //   router.push(`/workflow/${data?.data.id}`);
     },
     onError: (error) => {
       console.log(error);

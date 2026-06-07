@@ -107,7 +107,7 @@ const CreateWorkflow = () => {
               onClick={() => setOpen(false)}
               variant={"outline"}
             >
-              Cencel
+              Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Spinner />}

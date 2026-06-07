@@ -1,0 +1,74 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main, qa]
+    types: [completed]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  gate:
+    name: Gate check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      environment: ${{ steps.check.outputs.environment }}
+    steps:
+      - name: Check workflow conclusion
+        id: check
+        run: |
+          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
+            echo "CI workflow did not succeed — conclusion: ${{ github.event.workflow_run.conclusion }}"
+            exit 1
+          fi
+
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          if [[ "$BRANCH" == "main" ]]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH" == "qa" ]]; then
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+          else
+            echo "Branch $BRANCH is not deployable"
+            exit 1
+          fi
+
+  deploy:
+    name: Deploy to ${{ needs.gate.outputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [gate]
+    environment:
+      name: ${{ needs.gate.outputs.environment }}
+      url: ${{ steps.vercel.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Pull Vercel environment
+        run: npx vercel pull --yes --environment=${{ needs.gate.outputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project artifacts
+        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: vercel
+        run: |
+          URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
+            ${{ needs.gate.outputs.environment == 'production' && '--prod' || '' }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        run: |
+          URL="${{ steps.vercel.outputs.url }}"
+          echo "Smoke testing: $URL"
+          curl --fail --silent --max-time 30 "$URL" > /dev/null && echo "✓ Deploy is live"

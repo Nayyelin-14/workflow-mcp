@@ -1,0 +1,48 @@
+name: Setup Node and dependencies
+description: Composite action that sets up Node, installs dependencies, runs Prisma generate, and caches Prisma + Next.js build
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: "20"
+
+runs:
+  using: composite
+
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+
+    - name: Cache Prisma
+      id: cache-prisma
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/prisma
+          lib/generated/prisma
+        key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
+        restore-keys: |
+          prisma-${{ runner.os }}-
+
+    - name: Cache Next.js build
+      uses: actions/cache@v4
+      with:
+        path: .next/cache
+        key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json', '**/*.ts', '**/*.tsx') }}
+        restore-keys: |
+          nextjs-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Generate Prisma client
+      if: steps.cache-prisma.outputs.cache-hit != 'true'
+      run: npx prisma generate
+      shell: bash
