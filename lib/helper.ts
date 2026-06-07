@@ -1,4 +1,8 @@
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
+import { urlAlphabet } from "nanoid";
+
+const generateSuffix = customAlphabet(urlAlphabet, 10);
+
 export function generateID(type: string): string {
-  return `${type.toLocaleLowerCase()}-${nanoid(10)}`;
+  return `${type.toLocaleLowerCase()}-${generateSuffix()}`;
 }
