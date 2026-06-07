@@ -8,16 +8,13 @@ import { WorkflowProvider } from "@/context/workflow-context";
 import WorkflowCanvas from "./_common/workflow-canva";
 import { ReactFlowProvider } from "@xyflow/react";
 
-const page = () => {
+const Page = () => {
   const params = useParams();
   const workflowId = params?.workflowId as string;
   const {
     data: workflow,
     isPending,
-    isError,
-    error,
   } = useGetWorkflowById(workflowId);
-  console.log({ workflow, isPending, isError, error });
   if (!workflow && !isPending) {
     return <div>Workflow not found</div>;
   }
@@ -27,8 +24,8 @@ const page = () => {
         <ReactFlowProvider>
           <WorkflowProvider>
             <Header
-              name={workflow?.name!}
-              workflowId={workflowId!}
+              name={workflow?.name ?? ""}
+              workflowId={workflowId}
               isLoading={isPending}
             />
             <div className="flex-1 relative overflow-hidden">
@@ -47,4 +44,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

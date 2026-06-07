@@ -18,9 +18,16 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+interface FieldConfig {
+  type?: string;
+  description?: string;
+  default?: string | number | boolean;
+  enum?: string[];
+}
+
 interface JsonSchemaProps {
-  schema: any;
-  onChange: (schema: any) => void;
+  schema: Record<string, unknown>;
+  onChange: (schema: Record<string, unknown>) => void;
 }
 
 const SchemaType = {
@@ -37,22 +44,29 @@ const TYPE_COLORS: Record<string, string> = {
   enum: "bg-violet-500/10 text-violet-500 border-violet-500/20",
 };
 
+interface FieldState {
+  name: string;
+  type: string;
+  description: string;
+  enumValues: string;
+}
+
 export function JsonSchema({ schema, onChange }: JsonSchemaProps) {
-  const properties = schema?.properties || {};
-  const [fields, setFields] = useState(
-    Object.entries(properties).map(([name, config]: [string, any]) => ({
+  const properties = (schema?.properties as Record<string, FieldConfig>) || {};
+  const [fields, setFields] = useState<FieldState[]>(
+    Object.entries(properties).map(([name, config]) => ({
       name,
-      type: config.enum ? "enum" : config.type,
+      type: config.enum ? "enum" : (config.type ?? "string"),
       description: config.description || "",
       enumValues: config.enum?.join(", ") || "",
     })),
   );
 
-  const updateSchema = (newFields: any[]) => {
-    const props: any = {};
+  const updateSchema = (newFields: FieldState[]) => {
+    const props: Record<string, FieldConfig> = {};
     newFields.forEach((f) => {
       if (!f.name) return;
-      const field: any = {
+      const field: FieldConfig = {
         type: f.type === "enum" ? "string" : f.type,
         description: f.description || undefined,
         default: f.type === "number" ? 0 : f.type === "boolean" ? false : "",

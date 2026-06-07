@@ -53,11 +53,10 @@ export const useCreateWorkFlow = () => {
       axios
         .post("/api/workflow", { name, description })
         .then((res) => res.data),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Workflow created successfully");
     },
-    onError: (error) => {
-      console.log(error);
+    onError: () => {
       toast.error("Failed to create workflow");
     },
   });

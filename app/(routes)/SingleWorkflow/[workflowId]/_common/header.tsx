@@ -17,7 +17,7 @@ import {
   Trash,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 type workflowHeaderProps = {
   name?: string;
   workflowId?: string;
@@ -27,7 +27,7 @@ const tabs = [
   { id: "edit" as const, label: "Edit", icon: Pencil },
   { id: "preview" as const, label: "Preview", icon: Play },
 ];
-const Header = ({ name, workflowId, isLoading }: workflowHeaderProps) => {
+const Header = ({ name, isLoading }: workflowHeaderProps) => {
   //   const [view, setView] = useState<string>("edit");
   const { view, setView } = useWorkflow();
 

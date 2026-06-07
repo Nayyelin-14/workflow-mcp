@@ -30,7 +30,7 @@ import { JsonSchema } from "./json-schema";
 
 type props = {
   nodeId: string;
-  data: any;
+  data: Record<string, unknown>;
 };
 const OUTPUT_FORMATS = [
   { value: "text", label: "text" },
@@ -42,20 +42,24 @@ const AgentSettings = ({ nodeId, data }: props) => {
   const [openModel, setOpenModel] = useState<boolean>(false);
   const [openFormat, setOpenFormat] = useState<boolean>(false);
 
-  const [agentLabel, setAgentLabel] = useState<string>(data?.label || "Agent");
+  const [agentLabel, setAgentLabel] = useState<string>(
+    (data?.label as string) || "Agent",
+  );
 
-  const [instructions, setInstructions] = useState(data?.instructions || "");
+  const [instructions, setInstructions] = useState<string>(
+    (data?.instructions as string) || "",
+  );
 
   const model = data?.model;
-  const tools = data?.tools || [];
+  const tools = (data?.tools as { type: string; value: string; name?: string }[]) || [];
   const outputFormat = data?.outputFormat || "text";
-  const responseSchema = data?.responseSchema || {
+  const responseSchema = (data?.responseSchema as Record<string, unknown>) || {
     type: "object",
     title: "response_schema",
-    properties: {},
+    properties: {} as Record<string, unknown>,
   };
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: unknown) => {
     updateNodeData(nodeId, {
       [key]: value,
     });
@@ -66,7 +70,7 @@ const AgentSettings = ({ nodeId, data }: props) => {
       return;
     }
     const exists = tools.some(
-      (t: any) => t.type === "native" && t.value === toolId,
+      (t: { type: string; value: string }) => t.type === "native" && t.value === toolId,
     );
     if (!exists) {
       handleChange("tools", [
@@ -82,7 +86,7 @@ const AgentSettings = ({ nodeId, data }: props) => {
   const handleRemoveTool = (index: number) => {
     handleChange(
       "tools",
-      tools.filter((_: any, i: number) => i !== index),
+      tools.filter((_: { type: string; value: string }, i: number) => i !== index),
     );
   };
   return (
@@ -124,7 +128,7 @@ const AgentSettings = ({ nodeId, data }: props) => {
                 {TOOLS?.filter(
                   (tool) =>
                     !tools.some(
-                      (t: any) => t.type === "native" && t.value === tool.id,
+                      (t) => t.type === "native" && t.value === tool.id,
                     ),
                 ).map((tool) => {
                   const Icon = tool.icon;
@@ -144,7 +148,7 @@ const AgentSettings = ({ nodeId, data }: props) => {
           </div>
           {tools.length > 0 && (
             <div className="flex flex-wrap ga-2">
-              {tools.map((tool: any, index: number) => {
+              {tools.map((tool, index: number) => {
                 const nativeTool =
                   tool.type === "native"
                     ? TOOLS.find((t) => t.id === tool.value)
@@ -153,7 +157,7 @@ const AgentSettings = ({ nodeId, data }: props) => {
                 const label =
                   tool.type === "native" ? nativeTool?.name : tool.name;
                 return (
-                  <Badge>
+                  <Badge key={`${tool.type}-${tool.value}-${index}`}>
                     {Icon && <Icon className="h-4 w-4" />}
                     {label}
                     <button

@@ -164,7 +164,6 @@ const WorkflowNode = ({
         <Dialog open={showSettings} onOpenChange={setShowSettings}>
           <DialogContent
             className="max-w-md! px-0 pb-2"
-            overlayClass="bg-black/10! backdrop-blur-none!"
           >
             <DialogHeader className="px-4">
               <DialogTitle>{settingTitle || `${label} Settings`}</DialogTitle>

@@ -7,8 +7,9 @@ import {
   Background,
   BackgroundVariant,
   useReactFlow,
-  Edge,
-  Node,
+  type NodeChange,
+  type EdgeChange,
+  type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import Controls, {
@@ -37,19 +38,19 @@ const WorkflowCanvas = () => {
   };
 
   const onNodesChange = useCallback(
-    (changes: any) =>
+    (changes: NodeChange[]) =>
       setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-    [],
+    [setNodes],
   );
   const onEdgesChange = useCallback(
-    (changes: any) =>
+    (changes: EdgeChange[]) =>
       setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    [],
+    [setEdges],
   );
   const onConnect = useCallback(
-    (params: any) =>
+    (params: Connection) =>
       setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
-    [],
+    [setEdges],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -76,11 +77,9 @@ const WorkflowCanvas = () => {
 
       setNodes((prev) => [...prev, newNode]);
     },
-    [screenToFlowPosition],
+    [screenToFlowPosition, setNodes],
   );
 
-  console.log("edges", edges);
-  console.log("nodes", nodes);
   return (
     <>
       <div className="relative flex flex-1 h-full overflow-hidden">

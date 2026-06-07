@@ -1,6 +1,6 @@
 import { NodeProps } from "@xyflow/react";
 import WorkflowNode from "../../workflow-node";
-import { MousePointer2, PlayIcon } from "lucide-react";
+import { MousePointer2 } from "lucide-react";
 import AgentSettings from "./agent-settings";
 const AgentNode = (props: NodeProps) => {
   const { id, data, selected } = props;

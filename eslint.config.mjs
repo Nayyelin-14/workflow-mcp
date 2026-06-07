@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "no-console": "warn",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
   // Override default ignores of eslint-config-next.
@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "lib/generated/prisma/**",
+    "coverage/**",
     "vitest.config.*",
   ]),
 ]);
