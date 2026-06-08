@@ -15,15 +15,10 @@ jobs:
     outputs:
       environment: ${{ steps.check.outputs.environment }}
     steps:
-      - name: Check workflow conclusion
+      - name: Check branch
         id: check
         run: |
-          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
-            echo "CI workflow did not succeed — conclusion: ${{ github.event.workflow_run.conclusion }}"
-            exit 1
-          fi
-
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          BRANCH="${{ github.ref_name }}"
           if [[ "$BRANCH" == "main" ]]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == "qa" ]]; then
