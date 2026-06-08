@@ -9,7 +9,11 @@ if (!DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const prisma = globalForPrisma.prisma || new PrismaClient();
+const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    datasourceUrl: DATABASE_URL,
+  });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
