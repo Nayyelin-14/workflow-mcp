@@ -111,3 +111,17 @@ jobs:
           KINDE_SITE_URL: http://localhost:3000
           KINDE_POST_LOGIN_REDIRECT_URL: http://localhost:3000/workflow
           KINDE_POST_LOGOUT_REDIRECT_URL: http://localhost:3000/
+
+  ci-passed:
+    if: always()
+    needs: [code-quality, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build result
+        run: |
+          result="${{ needs.build.result }}"
+          if [[ "$result" != "success" ]]; then
+            echo "CI failed (result: $result)"
+            exit 1
+          fi
+          echo "CI passed"
