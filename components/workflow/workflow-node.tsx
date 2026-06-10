@@ -150,7 +150,7 @@ const WorkflowNode = ({
             )}
             {handles.source && (
               <BaseHandle
-                id={"target-1"}
+                id={"source-1"}
                 type="source"
                 className="size-2!"
                 position={Position.Right}
