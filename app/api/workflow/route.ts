@@ -1,32 +1,30 @@
 import prisma from "@/lib/prisma";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextResponse } from "next/server";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { withTimeout } from "@/lib/timeout";
+import { getAuthenticatedUser, unauthorizedResponse, serverErrorResponse, maxDuration } from "@/lib/api-utils";
 
-export async function GET() {
+export { maxDuration };
+
+export async function GET(req: Request) {
   try {
-    const session = await getKindeServerSession();
-    const user = await session?.getUser();
+    const user = await getAuthenticatedUser();
+    if (!user) return unauthorizedResponse();
 
-    if (!user?.id) {
-      return NextResponse.json(
-        { error: true, message: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    const workflows = await prisma.workflow.findMany({
-      where: { userId: user.id },
-      select: { id: true, name: true, description: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const workflows = await withTimeout(
+      prisma.workflow.findMany({
+        where: { userId: user.id },
+        select: { id: true, name: true, description: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      55_000,
+      req?.signal,
+    );
 
     return NextResponse.json({ success: true, workflows });
   } catch (error) {
     console.error("GET /api/workflow:", error);
-    return NextResponse.json(
-      { error: true, message: "Something went wrong" },
-      { status: 500 },
-    );
+    return serverErrorResponse();
   }
 }
 
@@ -42,24 +40,35 @@ export async function POST(req: Request) {
       );
     }
 
-    const session = await getKindeServerSession();
-    const user = await session?.getUser();
+    const user = await getAuthenticatedUser();
+    if (!user) return unauthorizedResponse();
 
-    if (!user?.id) {
+    const key = getRateLimitKey(user.id);
+    const limit = await rateLimit(key, { maxRequests: 20, windowMs: 60_000 });
+    if (!limit.success) {
       return NextResponse.json(
-        { error: true, message: "Unauthorized" },
-        { status: 401 },
+        {
+          error: true,
+          message: "Too many requests. Try again later.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) },
+        },
       );
     }
 
-    const newWorkflow = await prisma.workflow.create({
-      data: {
-        userId: user.id,
-        name: name.trim(),
-        description: description ?? "",
-        // flowObject
-      },
-    });
+    const newWorkflow = await withTimeout(
+      prisma.workflow.create({
+        data: {
+          userId: user.id,
+          name: name.trim(),
+          description: description ?? "",
+        },
+      }),
+      55_000,
+      req.signal,
+    );
 
     return NextResponse.json(
       { success: true, message: "Workflow created", workflow: newWorkflow },
@@ -81,9 +90,6 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json(
-      { error: true, message: "Something went wrong" },
-      { status: 500 },
-    );
+    return serverErrorResponse();
   }
 }

@@ -1,27 +1,27 @@
 import prisma from "@/lib/prisma";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextResponse } from "next/server";
+import { withTimeout } from "@/lib/timeout";
+import { getAuthenticatedUser, unauthorizedResponse, serverErrorResponse, maxDuration } from "@/lib/api-utils";
+
+export { maxDuration };
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
-    const session = await getKindeServerSession();
-    const user = await session?.getUser();
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { error: true, message: "Unauthorized" },
-        { status: 401 },
-      );
-    }
+    const user = await getAuthenticatedUser();
+    if (!user) return unauthorizedResponse();
 
     const { workflowId } = await params;
 
-    const workflow = await prisma.workflow.findUnique({
-      where: { id: workflowId },
-    });
+    const workflow = await withTimeout(
+      prisma.workflow.findUnique({
+        where: { id: workflowId },
+      }),
+      55_000,
+      req.signal,
+    );
 
     if (!workflow || workflow.userId !== user.id) {
       return NextResponse.json(
@@ -40,9 +40,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("GET /api/workflow/[workflowId]:", error);
-    return NextResponse.json(
-      { error: true, message: "Something went wrong" },
-      { status: 500 },
-    );
+    return serverErrorResponse();
   }
 }
