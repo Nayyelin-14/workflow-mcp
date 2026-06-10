@@ -75,19 +75,25 @@ context/
 └── query-provider.tsx           # TanStack provider
 features/
 └── use-workflow.ts             # API hooks (CRUD queries + mutations)
+hooks/
+└── use-mobile.ts               # Responsive breakpoint detection
 lib/
 ├── prisma.ts                   # DB client (singleton)
 ├── utils.ts                    # cn() class merger
 ├── helper.ts                   # nanoid-based ID generator
 ├── constants.ts                # AI models + tools config
+├── rate-limit.ts               # Upstash Redis rate limiter (in-memory fallback)
+├── timeout.ts                  # Promise timeout with AbortSignal support
 └── workflow/node-config.ts     # Node types, configs, factory
+proxy.ts                         # Kinde auth middleware (protects all routes except /)
 ```
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 20 (`.nvmrc` enforces Node 20)
 - MongoDB Atlas account (free tier)
 - Kinde account (free tier)
+- Upstash Redis account (free tier) — optional; falls back to in-memory rate limiting
 
 ## Getting Started
 
@@ -109,6 +115,8 @@ Fill in `.env`:
 | `KINDE_SITE_URL` | App URL (http://localhost:3000) |
 | `KINDE_POST_LOGIN_REDIRECT_URL` | Post-login redirect |
 | `KINDE_POST_LOGOUT_REDIRECT_URL` | Post-logout redirect |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL (for rate limiting) |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 
 ```bash
 npx prisma generate
@@ -163,14 +171,17 @@ Upstream node outputs are automatically available as `{{nodeId.outputName}}` var
 
 ### API Endpoints
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/auth/[kindeAuth]` | No | Kinde auth handler |
-| GET | `/api/workflow` | Yes | List user's workflows |
-| POST | `/api/workflow` | Yes | Create workflow (name required) |
-| GET | `/api/workflow/:id` | Yes | Get single workflow |
+| Method | Endpoint | Auth | Rate Limit | Description |
+|--------|----------|------|------------|-------------|
+| GET | `/api/auth/[kindeAuth]` | No | None | Kinde auth handler |
+| GET | `/api/workflow` | Yes | None | List user's workflows |
+| POST | `/api/workflow` | Yes | 20 req / 60s per user | Create workflow (name required) |
+| GET | `/api/workflow/:id` | Yes | None | Get single workflow |
 
-Note: PUT/PATCH/DELETE endpoints are not yet implemented.
+- Rate limiting uses Upstash Redis (sliding window) with in-memory fallback when Redis is unavailable.
+- All API routes have `maxDuration = 60s` configured for serverless deployment.
+- Queries use a 55s timeout with AbortSignal (also triggers on client disconnect).
+- PUT/PATCH/DELETE endpoints are not yet implemented.
 
 ## CI/CD
 

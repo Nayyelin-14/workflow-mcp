@@ -41,6 +41,7 @@ const MentionInput = ({
   const suggestions = useMemo(() => {
     if (!nodeId) return [];
     const availableNodes = getVariablesForNode(nodeId);
+    console.log(availableNodes);
     const result: suggestionType[] = [];
     availableNodes.forEach((node) => {
       const nodeLabel = (node?.label as string)
@@ -61,17 +62,17 @@ const MentionInput = ({
       control: {
         fontSize: 14,
         lineHeight: "1.5rem",
-        position: "relative", // ← add this
+        position: "relative",
       },
       highlighter: {
         padding: "0.5rem 0.75rem",
         border: "1px solid transparent",
-        position: "absolute", // ← add this
+        position: "absolute",
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        pointerEvents: "none", // ← add this
+        pointerEvents: "none",
         overflow: "hidden",
       },
       input: {
@@ -82,8 +83,8 @@ const MentionInput = ({
         outline: "none",
         backgroundColor: "transparent",
         color: "inherit",
-        position: "relative", // ← add this
-        zIndex: 1, // ← add this
+        position: "relative",
+        zIndex: 1,
       },
       suggestions: {
         list: { maxHeight: 200, overflow: "auto" },
@@ -96,6 +97,8 @@ const MentionInput = ({
     }),
     [multiline],
   );
+  console.log(suggestions);
+  console.log(value);
 
   return (
     <div
@@ -141,7 +144,7 @@ const MentionInput = ({
                 value={entry.display}
                 className={cn(
                   `flex justify-between  text-sm cursor-pointer hover:bg-black/10`,
-                  focused && "bg-accent text-accent-foreground",
+                  focused && "bg-red-500 text-accent-foreground",
                 )}
               >
                 <div className="flex flex-1 items-start gap-2">
