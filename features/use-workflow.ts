@@ -43,13 +43,13 @@ export const useGetWorkflowById = (workflowId: string) => {
   });
 };
 
-type wrokFlowPayload = {
+type WorkflowPayload = {
   name: string;
   description?: string;
 };
 export const useCreateWorkFlow = () => {
   return useMutation({
-    mutationFn: async ({ name, description }: wrokFlowPayload) =>
+    mutationFn: async ({ name, description }: WorkflowPayload) =>
       axios
         .post("/api/workflow", { name, description })
         .then((res) => res.data),
