@@ -14,7 +14,7 @@ describe("generateID", () => {
 
   it("includes a nanoid suffix of 10 chars", () => {
     const id = generateID("end");
-    const suffix = id.split("-")[1];
+    const suffix = id.slice(id.indexOf("-") + 1);
     expect(suffix).toHaveLength(10);
   });
 
