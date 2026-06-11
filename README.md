@@ -5,7 +5,7 @@ Flowagent.ai is an open-source visual AI workflow builder that lets you create m
 ## How It Works
 
 ### The Canvas
-The editor is built on React Flow. You drag nodes from a palette onto the canvas and connect them by drawing edges between ports. Each node represents a step in the workflow — an AI agent call, a conditional branch, an HTTP request, etc.
+The editor is built on React Flow. You drag nodes from a palette onto the canvas and connect them by drawing edges between ports. Each node represents a step in the workflow — an AI agent call, a conditional branch, an annotation, etc.
 
 ### The Node System
 Six node types are available:
@@ -14,10 +14,10 @@ Six node types are available:
 - **Agent** — The core AI node. Configure system instructions, pick a model (Gemini, GPT, Claude), assign tools (web search), set output format (text or JSON), and define a structured JSON schema for the response.
 - **If/Else** — Conditional branching. Route execution down different paths based on upstream outputs.
 - **HTTP** — Make external API requests within the workflow.
-- **Comment** — Annotations for documentation.
+- **Comment** — Free-form text annotations for documentation directly on the canvas.
 - **End** — Terminal node. Marks workflow completion.
 
-Nodes are connected by edges. Data flows from upstream nodes to downstream nodes.
+All nodes have custom canvas components. Start, Agent, End, If/Else, and Comment each have their own visual component with custom settings panels.
 
 ### The Variable System
 Downstream nodes can reference outputs from upstream nodes using `{{variable}}` syntax. When you type `{{` in an instruction field, a mention dropdown shows all available variables from connected upstream nodes (filtered by actual edge connections, not all nodes in the workflow).
@@ -39,9 +39,6 @@ The Agent node is the most feature-rich:
 3. Each node's output is stored and available to downstream nodes via the variable system.
 4. Conditional branches (If/Else) route execution based on runtime values.
 
-### Current State
-The workflow editor UI is fully functional for designing workflows. Start and Agent nodes have complete custom settings panels. If/Else, HTTP, Comment, and End nodes are defined in configuration and can be placed on the canvas but use generic rendering. The API supports creating, listing, and fetching workflows; save/update/delete are partially implemented.
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -53,7 +50,7 @@ The workflow editor UI is fully functional for designing workflows. Start and Ag
 | Database | MongoDB via Prisma ORM |
 | Query | TanStack React Query v5 |
 | Canvas | React Flow (@xyflow/react) |
-| Forms | react-hook-form + zod |
+| State | Zustand v5 + React Context |
 | Testing | Vitest + Testing Library + jsdom |
 
 ## Architecture
@@ -64,28 +61,54 @@ app/
 │   ├── (landing)/              # Public landing page
 │   ├── (dashboard)/            # /workflow — workflow list
 │   └── SingleWorkflow/         # /workflow/[id] — visual editor
+│       └── [workflowId]/
+│           ├── page.tsx            # Canvas page (providers, layout)
+│           └── _common/
+│               ├── header.tsx          # Edit/preview toggle
+│               ├── workflow-canva.tsx  # Main ReactFlow canvas
+│               └── NodePanel.tsx       # Drag-and-drop node palette
 ├── api/
 │   ├── auth/[kindeAuth]/       # Kinde auth handler
-│   └── workflow/               # CRUD endpoints (GET, POST; no PUT/DELETE yet)
+│   └── workflow/               # CRUD endpoints (GET, POST, PUT, GET/:id)
 components/
-├── ui/                         # 23 shadcn primitives incl. tags-input
-└── workflow/                   # Canvas, nodes, mention-input, controls
+├── ui/                         # 23+ shadcn primitives incl. action-bar, tags-input
+└── workflow/
+    ├── workflow-node.tsx        # Generic node wrapper with settings dialog
+    ├── controls.tsx             # Canvas zoom/pan controls
+    ├── mention-input.tsx        # {{variable}} mention autocomplete
+    └── custom-nodes/           # Node type components
+        ├── agent/               # Agent node + settings + JSON schema editor
+        ├── start/               # Start node + settings
+        ├── end/                 # End node + settings
+        ├── if-else/             # If/Else node + settings
+        └── comment/             # Comment node (inline textarea)
 context/
-├── workflow-context.tsx         # Node/edge state, variable resolution
-└── query-provider.tsx           # TanStack provider
+├── workflow-context.tsx         # Live node/edge state, variable resolution
+└── query-provider.tsx           # TanStack QueryClient provider
 features/
-└── use-workflow.ts             # API hooks (CRUD queries + mutations)
+└── use-workflow.ts             # React Query hooks (list, get, create, update)
 hooks/
-└── use-mobile.ts               # Responsive breakpoint detection
+├── use-node-data.ts            # Local state with blur-based commit to React Flow
+├── use-unsaved-change.ts       # Track unsaved changes against saved baseline
+├── use-mobile.ts               # Responsive breakpoint detection
+├── use-as-ref.ts               # Stable callback refs for mutable props
+├── use-isomorphic-layout-effect.ts  # SSR-safe useLayoutEffect
+└── __tests__/
+store/
+└── workflow-store.ts           # Zustand store (savedNodes, savedEdges)
 lib/
 ├── prisma.ts                   # DB client (singleton)
 ├── utils.ts                    # cn() class merger
 ├── helper.ts                   # nanoid-based ID generator
-├── constants.ts                # AI models + tools config
+├── constants.ts                # DRAG_DATA_TYPE, AI models, tools
+├── timeout.ts                  # Promise timeout with AbortSignal
+├── api-utils.ts                # Auth helpers, error responses
 ├── rate-limit.ts               # Upstash Redis rate limiter (in-memory fallback)
-├── timeout.ts                  # Promise timeout with AbortSignal support
-└── workflow/node-config.ts     # Node types, configs, factory
-proxy.ts                         # Kinde auth middleware (protects all routes except /)
+├── redis.ts                    # Upstash Redis client
+├── auth-cache.ts               # Redis-cached user lookup
+├── compose-refs.ts             # React ref composition utility
+└── workflow/node-config.ts     # Node type definitions, configs, factory
+proxy.ts                         # Kinde auth middleware
 ```
 
 ## Prerequisites
@@ -134,54 +157,45 @@ npm run dev
 | `npm run typecheck` | TypeScript type check |
 | `npm test` | Run tests once |
 | `npm run test:watch` | Watch mode |
+| `npm run test:ci` | CI verbose output |
 | `npm run test:coverage` | Run with coverage report |
 
-## Project Structure
+## Workflow Nodes
 
-### Route Groups
+6 node types defined in configuration. All have custom canvas components:
 
-- **`/`** — Landing page (public)
-- **`/workflow`** — Dashboard listing saved workflows
-- **`/workflow/[id]`** — Visual workflow editor with React Flow canvas
+| Node | Type | Deletable | Custom Component | Settings Panel |
+|------|------|-----------|-----------------|----------------|
+| Start | Entry point | No | Yes | Yes |
+| Agent | AI agent configuration | Yes | Yes | Yes (full) |
+| If/Else | Conditional branching | Yes | Yes | Yes |
+| Comment | Annotation | Yes | Yes | Inline textarea |
+| End | Terminal | Yes | Yes | Yes |
+| HTTP | API request | Yes | (in palette only) | — |
 
-### Workflow Nodes
+## State Management
 
-6 node types defined in configuration. Start and Agent have full custom components; others are draggable but use generic rendering:
+Three layers:
 
-| Node | Type | Deletable | Custom Component |
-|------|------|-----------|-----------------|
-| Start | Entry point | No | Yes |
-| Agent | AI agent configuration | Yes | Yes |
-| If/Else | Conditional branching | Yes | No (generic) |
-| HTTP | API request | Yes | No (generic) |
-| Comment | Annotation | Yes | No (generic) |
-| End | Terminal | Yes | No (generic) |
+1. **Zustand** (`store/workflow-store.ts`) — Canonical "saved" state. Stores `savedNodes`/`savedEdges` after a successful save to compare against current canvas state.
 
-### Agent Node Features
+2. **React Context** (`context/workflow-context.tsx`) — Live working state for the open workflow. Provides `nodes`, `setNodes`, `edges`, `setEdges`, `view`, and `getVariablesForNode()`.
 
-- **System instructions** with `{{variable}}` mention support (auto-complete from upstream node outputs)
-- **Model selection** — 5 models: Gemini 2.0 Flash, Gemini 2.5 Flash Lite, Gemini 2.5 Flash, GPT-3.5 Turbo, Claude 3 Haiku
-- **Tools** — Web Search (native), MCP Server (placeholder)
-- **Output format** — Text or JSON
-- **JSON schema editor** — Visual builder for structured output with support for string, number, boolean, and enum fields
+3. **TanStack React Query** (`features/use-workflow.ts`) — Server state. Queries and mutations for workflow CRUD. Automatically caches and invalidates.
 
-### Variable System
-
-Upstream node outputs are automatically available as `{{nodeId.outputName}}` variables. The mention input provides autocomplete suggestions scoped to nodes that connect upstream in the workflow.
-
-### API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Auth | Rate Limit | Description |
 |--------|----------|------|------------|-------------|
 | GET | `/api/auth/[kindeAuth]` | No | None | Kinde auth handler |
 | GET | `/api/workflow` | Yes | None | List user's workflows |
 | POST | `/api/workflow` | Yes | 20 req / 60s per user | Create workflow (name required) |
-| GET | `/api/workflow/:id` | Yes | None | Get single workflow |
+| GET | `/api/workflow/:id` | Yes | None | Get single workflow with parsed flowObject |
+| PUT | `/api/workflow/:id` | Yes | None | Save workflow nodes/edges to flowObject |
 
 - Rate limiting uses Upstash Redis (sliding window) with in-memory fallback when Redis is unavailable.
 - All API routes have `maxDuration = 60s` configured for serverless deployment.
 - Queries use a 55s timeout with AbortSignal (also triggers on client disconnect).
-- PUT/PATCH/DELETE endpoints are not yet implemented.
 
 ## CI/CD
 

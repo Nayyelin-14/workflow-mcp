@@ -4,6 +4,7 @@ import {
   getNodeConfig,
   createNode,
   NodeTypeEnum,
+  type NodeSettingsProps,
 } from "@/lib/workflow/node-config";
 
 describe("NODE_CONFIG", () => {
@@ -20,6 +21,15 @@ describe("NODE_CONFIG", () => {
       expect(config).toHaveProperty("inputs");
     }
   });
+
+  it("comment node has correct config", () => {
+    const config = NODE_CONFIG[NodeTypeEnum.COMMENT];
+    expect(config.label).toBe("Comment");
+    expect(config.color).toBe("bg-yellow-500");
+    expect(config.inputs).toHaveProperty("comment");
+    expect(config.inputs.comment).toBe("");
+    expect(config.outputs).toContain("output.comment");
+  });
 });
 
 describe("getNodeConfig", () => {
@@ -27,6 +37,11 @@ describe("getNodeConfig", () => {
     const config = getNodeConfig(NodeTypeEnum.START);
     expect(config).not.toBeNull();
     expect(config?.label).toBe("Start");
+  });
+
+  it("returns config for comment type", () => {
+    const config = getNodeConfig(NodeTypeEnum.COMMENT);
+    expect(config?.label).toBe("Comment");
   });
 
   it("returns null for invalid type", () => {
@@ -67,6 +82,13 @@ describe("createNode", () => {
       method: "GET",
       url: "",
     });
+  });
+
+  it("creates comment node with empty comment", () => {
+    const node = createNode({ type: NodeTypeEnum.COMMENT });
+    expect(node.type).toBe("comment");
+    expect(node.data).toHaveProperty("comment", "");
+    expect(node.data.label).toBe("Comment");
   });
 
   it("throws for unknown type", () => {

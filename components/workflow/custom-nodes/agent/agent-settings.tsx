@@ -27,17 +27,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { JsonSchema } from "./json-schema";
-
-type props = {
-  nodeId: string;
-  data: Record<string, unknown>;
-};
+import type { NodeSettingsProps } from "@/lib/workflow/node-config";
 const OUTPUT_FORMATS = [
   { value: "text", label: "text" },
   { value: "json", label: "json" },
 ];
 
-const AgentSettings = ({ nodeId, data }: props) => {
+const AgentSettings = ({ nodeId, data }: NodeSettingsProps) => {
   const { updateNodeData } = useReactFlow();
   const [openModel, setOpenModel] = useState<boolean>(false);
   const [openFormat, setOpenFormat] = useState<boolean>(false);

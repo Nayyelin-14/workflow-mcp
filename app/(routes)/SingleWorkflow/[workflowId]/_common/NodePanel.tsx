@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { getNodeConfig, NodeTypeEnum } from "@/lib/workflow/node-config";
+import { DRAG_DATA_TYPE } from "@/lib/constants";
 import { Panel } from "@xyflow/react";
 import React from "react";
 
@@ -19,7 +20,7 @@ const NODE_LIST = [
 ];
 
 const onDragStart = (event: React.DragEvent, nodeType: string) => {
-  event.dataTransfer.setData("application/reactflow", nodeType);
+  event.dataTransfer.setData(DRAG_DATA_TYPE, nodeType);
   event.dataTransfer.effectAllowed = "move";
 };
 const NodePanel = () => {

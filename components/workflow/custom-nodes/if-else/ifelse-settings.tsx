@@ -1,5 +1,5 @@
 import { useReactFlow } from "@xyflow/react";
-import React, { useState } from "react";
+import React from "react";
 import { Condition } from "./ifelse-node";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2Icon } from "lucide-react";
@@ -13,11 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type props = {
-  nodeId: string;
-  data: Record<string, unknown>;
-};
+import type { NodeSettingsProps } from "@/lib/workflow/node-config";
 const OPERATORS = [
   { label: "Equals", value: "=" },
   { label: "Not equals", value: "!=" },
@@ -33,8 +29,7 @@ const OPERATORS = [
   { label: "Is not empty", value: "is_not_empty" },
 ] as const;
 
-const IfElseNodeSettings = ({ nodeId, data }: props) => {
-  const [caseName, setCaseName] = useState<string>("");
+const IfElseNodeSettings = ({ nodeId, data }: NodeSettingsProps) => {
   const { updateNodeData } = useReactFlow();
   const conditions = (data?.conditions as Condition[]) || [];
   const condition_label = (index: number) => {
