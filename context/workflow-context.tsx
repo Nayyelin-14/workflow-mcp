@@ -42,6 +42,7 @@ export function WorkflowProvider({
   );
   const [edges, setEdges] = useState<Edge[]>(initialEdges ?? []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (initialNodes?.length) {
       setNodes(initialNodes);
