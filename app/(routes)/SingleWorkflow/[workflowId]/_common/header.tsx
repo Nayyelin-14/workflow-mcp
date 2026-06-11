@@ -78,7 +78,7 @@ const Header = ({ name, isLoading }: workflowHeaderProps) => {
           </div>
           <div className="flex items-center  gap-2 bg-card p-1 rounded-lg">
             <DropdownMenu>
-              <DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
                 <Button variant={"ghost"} size="icon" className="size-8">
                   <MoreHorizontal className="size-4" />
                 </Button>

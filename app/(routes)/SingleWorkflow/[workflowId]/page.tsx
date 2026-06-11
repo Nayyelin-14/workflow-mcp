@@ -6,15 +6,16 @@ import Header from "./_common/header";
 import { Spinner } from "@/components/ui/spinner";
 import { WorkflowProvider } from "@/context/workflow-context";
 import WorkflowCanvas from "./_common/workflow-canva";
-import { ReactFlowProvider } from "@xyflow/react";
+import { Edge, Node, ReactFlowProvider } from "@xyflow/react";
 
 const Page = () => {
   const params = useParams();
   const workflowId = params?.workflowId as string;
-  const {
-    data: workflow,
-    isPending,
-  } = useGetWorkflowById(workflowId);
+  const { data: workflow, isPending } = useGetWorkflowById(workflowId);
+  const flowObject = workflow?.flowObject as
+    | { nodes: Node[]; edges: Edge[] }
+    | undefined;
+
   if (!workflow && !isPending) {
     return <div>Workflow not found</div>;
   }
@@ -22,7 +23,11 @@ const Page = () => {
     <div className="min-h-screen bg-background">
       <div className="flex flex-col h-screen relative">
         <ReactFlowProvider>
-          <WorkflowProvider>
+          <WorkflowProvider
+            workflowId={workflowId}
+            initialNodes={flowObject?.nodes ?? []}
+            initialEdges={flowObject?.edges ?? []}
+          >
             <Header
               name={workflow?.name ?? ""}
               workflowId={workflowId}
@@ -34,7 +39,7 @@ const Page = () => {
                   <Spinner className="size-12 text-primary" />
                 </div>
               ) : (
-                <WorkflowCanvas />
+                <WorkflowCanvas workflowId={workflow.id} />
               )}
             </div>
           </WorkflowProvider>

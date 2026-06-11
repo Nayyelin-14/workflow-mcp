@@ -98,7 +98,7 @@ export const NODE_CONFIG: Record<NodeType, NodeConfigBase> = {
     icon: MessageSquare,
     color: "bg-yellow-500",
     inputs: {
-      comment: " ",
+      comment: "",
     },
     outputs: ["output.comment"],
   },
@@ -121,6 +121,11 @@ export const getNodeConfig = (type: NodeType) => {
   if (!nodeType) return null;
 
   return nodeType;
+};
+
+export type NodeSettingsProps = {
+  nodeId: string;
+  data: Record<string, unknown>;
 };
 
 export type CreateNodeOptions = {

@@ -20,10 +20,22 @@ import { cn } from "@/lib/utils";
 import NodePanel from "./NodePanel";
 import { useWorkflow } from "@/context/workflow-context";
 import { createNode, NodeType, NodeTypeEnum } from "@/lib/workflow/node-config";
+import { DRAG_DATA_TYPE } from "@/lib/constants";
 import StartNode from "@/components/workflow/custom-nodes/start/start-node";
 import AgentNode from "@/components/workflow/custom-nodes/agent/agent-node";
+import IfElseNode from "@/components/workflow/custom-nodes/if-else/ifelse-node";
+import CommentNode from "@/components/workflow/custom-nodes/comment/comment-node";
+import EndNode from "@/components/workflow/custom-nodes/end/end-node";
+import { useUpdateWorkflow } from "@/features/use-workflow";
+import {
+  ActionBar,
+  ActionBarGroup,
+  ActionBarItem,
+} from "@/components/ui/action-bar";
+import { Spinner } from "@/components/ui/spinner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-change";
 
-const WorkflowCanvas = () => {
+const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
   const { view, nodes, setNodes, edges, setEdges } = useWorkflow();
   const { screenToFlowPosition } = useReactFlow();
 
@@ -35,7 +47,15 @@ const WorkflowCanvas = () => {
   const nodeTypes = {
     [NodeTypeEnum.START]: StartNode,
     [NodeTypeEnum.AGENT]: AgentNode,
+    [NodeTypeEnum.IF_ELSE]: IfElseNode,
+    [NodeTypeEnum.COMMENT]: CommentNode,
+    [NodeTypeEnum.END]: EndNode,
   };
+
+  const { hasUnsavedChanges, discardChanges } = useUnsavedChanges({
+    nodes,
+    edges,
+  });
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) =>
@@ -61,9 +81,7 @@ const WorkflowCanvas = () => {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const node_type = event.dataTransfer.getData(
-        "application/reactflow",
-      ) as NodeType;
+      const node_type = event.dataTransfer.getData(DRAG_DATA_TYPE) as NodeType;
 
       const position = screenToFlowPosition({
         x: event.clientX,
@@ -79,6 +97,19 @@ const WorkflowCanvas = () => {
     },
     [screenToFlowPosition, setNodes],
   );
+
+  // /update workflow
+  const { mutate: updateWorkFlowAction, isPending: isUpdating } =
+    useUpdateWorkflow(workflowId);
+
+  const handleDiscard = () => {
+    const result = discardChanges();
+    setNodes(result.nodes);
+    setEdges(result.edges);
+  };
+  const handleSaveChanges = () => {
+    updateWorkFlowAction({ nodes, edges });
+  };
 
   return (
     <>
@@ -114,6 +145,32 @@ const WorkflowCanvas = () => {
           )}
         </div>
       </div>
+
+      <ActionBar
+        open={hasUnsavedChanges}
+        side="top"
+        align="center"
+        sideOffset={70}
+        className="max-w-xs "
+      >
+        <ActionBarGroup>
+          <ActionBarItem
+            disabled={isUpdating}
+            variant={"ghost"}
+            onClick={handleDiscard}
+          >
+            Discard
+          </ActionBarItem>
+          <ActionBarItem
+            disabled={isUpdating}
+            variant={"secondary"}
+            onClick={handleSaveChanges}
+          >
+            {isUpdating && <Spinner />}
+            {!isUpdating && "Save Changes"}
+          </ActionBarItem>
+        </ActionBarGroup>
+      </ActionBar>
     </>
   );
 };
