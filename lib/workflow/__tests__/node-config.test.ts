@@ -87,8 +87,7 @@ describe("createNode", () => {
   it("creates comment node with empty comment", () => {
     const node = createNode({ type: NodeTypeEnum.COMMENT });
     expect(node.type).toBe("comment");
-    expect(node.data).toHaveProperty("comment");
-    expect(node.data.comment).toBe("");
+    expect(node.data).toHaveProperty("comment", "");
     expect(node.data.label).toBe("Comment");
   });
 
