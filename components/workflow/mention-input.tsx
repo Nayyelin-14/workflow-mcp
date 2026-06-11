@@ -41,7 +41,6 @@ const MentionInput = ({
   const suggestions = useMemo(() => {
     if (!nodeId) return [];
     const availableNodes = getVariablesForNode(nodeId);
-    console.log(availableNodes);
     const result: suggestionType[] = [];
     availableNodes.forEach((node) => {
       const nodeLabel = (node?.label as string)
@@ -100,9 +99,6 @@ const MentionInput = ({
     }),
     [multiline],
   );
-  console.log(suggestions);
-  console.log(value);
-
   return (
     <div
       className={cn(

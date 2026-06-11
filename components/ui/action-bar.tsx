@@ -156,6 +156,7 @@ function ActionBar(props: ActionBarProps) {
   const dir = DirectionPrimitive.useDirection(dirProp);
 
   React.useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

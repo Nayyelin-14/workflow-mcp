@@ -42,11 +42,12 @@ export function WorkflowProvider({
   );
   const [edges, setEdges] = useState<Edge[]>(initialEdges ?? []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (initialNodes?.length) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setNodes(initialNodes);
       setEdges(initialEdges ?? []);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [workflowId, initialNodes, initialEdges]);
   const getUpStreamNodes = (nodeId: string) => {
