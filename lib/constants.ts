@@ -1,6 +1,8 @@
 import { GlobeIcon, Server } from "lucide-react";
 import React from "react";
 
+export const DRAG_DATA_TYPE = "application/reactflow" as const;
+
 export const MODELS = [
   {
     value: "google/gemini-2.0-flash-001",

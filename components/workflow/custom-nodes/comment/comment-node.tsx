@@ -1,19 +1,15 @@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { NodeProps, useReactFlow } from "@xyflow/react";
-import React, { useState } from "react";
+import { NodeProps } from "@xyflow/react";
+import React from "react";
+import { useNodeData } from "@/hooks/use-node-data";
 
 const CommentNode = ({ data, id: nodeId }: NodeProps) => {
-  const { updateNodeData } = useReactFlow();
-  const [comment, setComment] = useState<string>(
-    (data?.comment as string) || "",
+  const { value: comment, handleChange: setComment, handleBlur: handleCommentBlur } = useNodeData(
+    nodeId,
+    "comment",
+    ((data?.comment as string) || "").trim(),
   );
-
-  const handleCommentChange = (value: string) => {
-    updateNodeData(nodeId, {
-      comment: value,
-    });
-  };
   return (
     <div
       className={cn(
@@ -24,7 +20,12 @@ const CommentNode = ({ data, id: nodeId }: NodeProps) => {
       <Textarea
         value={comment || ""}
         onChange={(e) => setComment(e.target.value)}
-        onBlur={() => handleCommentChange(comment)}
+        onBlur={handleCommentBlur}
+        className="h-full w-full px-1! border-none focus-visible:ring-offset-0 shadow-none overflow-auto 
+        resize-none border-0 bg-transparent
+        p-1 text-xs placeholder:text-xs focus-visible:ring-0 dark:bg-transparent
+    dark:text-black max-h-37.5 min-h-20 "
+        placeholder="Write down the comment"
       />
     </div>
   );
