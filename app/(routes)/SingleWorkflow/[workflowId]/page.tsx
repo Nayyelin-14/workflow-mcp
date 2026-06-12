@@ -42,6 +42,7 @@ const Page = () => {
                 <WorkflowCanvas workflowId={workflow.id} />
               )}
             </div>
+            
           </WorkflowProvider>
         </ReactFlowProvider>
       </div>

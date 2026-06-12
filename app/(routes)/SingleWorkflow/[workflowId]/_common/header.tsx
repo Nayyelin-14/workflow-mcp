@@ -86,7 +86,7 @@ const Header = ({ name, isLoading }: workflowHeaderProps) => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
                   <Trash className="w-3.5 h-3.5" />
-                  <span>Delte</span>
+                  <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
