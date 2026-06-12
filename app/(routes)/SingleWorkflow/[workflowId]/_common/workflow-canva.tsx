@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/action-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-change";
+import LiveChat from "@/components/workflow/live-chat";
 
 const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
   const { view, nodes, setNodes, edges, setEdges } = useWorkflow();
@@ -139,11 +140,14 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
             bgColor="var(--sidebar)"
             variant={BackgroundVariant.Dots}
           />
-          {!isPreview && <NodePanel />}
-          {!isPreview && (
+          <div className={cn("transition-opacity duration-300 ease-in-out", isPreview ? "opacity-0 pointer-events-none" : "opacity-100")}>
+            <NodePanel />
+          </div>
+          <div className={cn("transition-all duration-300 ease-in-out delay-75", isPreview ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100")}>
             <Controls toolMode={toolMode} setToolMode={setToolMode} />
-          )}
+          </div>
         </div>
+        <LiveChat workflowId={workflowId} />
       </div>
 
       <ActionBar

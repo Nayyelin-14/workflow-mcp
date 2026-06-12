@@ -5,19 +5,19 @@ Flowagent.ai is an open-source visual AI workflow builder that lets you create m
 ## How It Works
 
 ### The Canvas
-The editor is built on React Flow. You drag nodes from a palette onto the canvas and connect them by drawing edges between ports. Each node represents a step in the workflow — an AI agent call, a conditional branch, an annotation, etc.
+The editor is built on React Flow. You drag nodes from a palette onto the canvas and connect them by drawing edges between ports. Each node represents a step in the workflow — an AI agent call, a conditional branch, an HTTP request, or an annotation.
 
 ### The Node System
 Six node types are available:
 
 - **Start** — The entry point. Every workflow begins here.
-- **Agent** — The core AI node. Configure system instructions, pick a model (Gemini, GPT, Claude), assign tools (web search), set output format (text or JSON), and define a structured JSON schema for the response.
-- **If/Else** — Conditional branching. Route execution down different paths based on upstream outputs.
-- **HTTP** — Make external API requests within the workflow.
+- **Agent** — The core AI node. Configure system instructions, pick a model (Gemini, GPT, Claude), assign tools (web search, MCP servers), set output format (text or JSON), and define a structured JSON schema for the response.
+- **If/Else** — Conditional branching. Route execution down different paths based on upstream outputs using operators (equals, contains, greater than, etc.).
+- **HTTP** — Make external API requests within the workflow (listed in palette; custom component in development).
 - **Comment** — Free-form text annotations for documentation directly on the canvas.
-- **End** — Terminal node. Marks workflow completion.
+- **End** — Terminal node. Marks workflow completion with an output value.
 
-All nodes have custom canvas components. Start, Agent, End, If/Else, and Comment each have their own visual component with custom settings panels.
+All node types have custom canvas components with dedicated settings panels (except HTTP and Comment, which uses an inline textarea).
 
 ### The Variable System
 Downstream nodes can reference outputs from upstream nodes using `{{variable}}` syntax. When you type `{{` in an instruction field, a mention dropdown shows all available variables from connected upstream nodes (filtered by actual edge connections, not all nodes in the workflow).
@@ -32,6 +32,9 @@ The Agent node is the most feature-rich:
 3. **Tools** — Enable web search or connect to external MCP servers.
 4. **Output Format** — Text (free-form response) or JSON (structured output).
 5. **JSON Schema Editor** — When JSON format is selected, a visual schema builder lets you define fields (name, type, description) and enum values for structured responses.
+
+### AI Chat Preview
+Preview your workflow with a built-in AI chat panel. When toggling to Preview mode, a floating chat window appears in the bottom-right corner. Powered by the Vercel AI SDK (`@ai-sdk/react`), it lets you interact with the workflow as if you were an end user. Messages are rendered with **streamdown** — a streaming Markdown renderer with support for CJK text, syntax-highlighted code blocks, LaTeX math, and Mermaid diagrams.
 
 ### Data Flow
 1. The Start node triggers execution.
@@ -51,7 +54,12 @@ The Agent node is the most feature-rich:
 | Query | TanStack React Query v5 |
 | Canvas | React Flow (@xyflow/react) |
 | State | Zustand v5 + React Context |
+| AI SDK | Vercel AI SDK v6 (`ai`, `@ai-sdk/react`) |
+| Markdown | streamdown v2 (CJK, code, math, mermaid plugins) |
+| Icons | lucide-react |
+| Forms | react-hook-form + zod |
 | Testing | Vitest + Testing Library + jsdom |
+| Rate Limiting | Upstash Redis (in-memory fallback) |
 
 ## Architecture
 
@@ -63,35 +71,41 @@ app/
 │   └── SingleWorkflow/         # /workflow/[id] — visual editor
 │       └── [workflowId]/
 │           ├── page.tsx            # Canvas page (providers, layout)
+│           ├── layout.tsx          # Minimal wrapper
 │           └── _common/
-│               ├── header.tsx          # Edit/preview toggle
+│               ├── header.tsx          # Edit/preview toggle, save, delete
 │               ├── workflow-canva.tsx  # Main ReactFlow canvas
 │               └── NodePanel.tsx       # Drag-and-drop node palette
 ├── api/
 │   ├── auth/[kindeAuth]/       # Kinde auth handler
 │   └── workflow/               # CRUD endpoints (GET, POST, PUT, GET/:id)
+├── error.tsx                   # Global error boundary
+├── loading.tsx                 # Root loading state
+└── globals.css                 # Tailwind v4 + shadcn theme (oklch)
 components/
-├── ui/                         # 23+ shadcn primitives incl. action-bar, tags-input
-└── workflow/
-    ├── workflow-node.tsx        # Generic node wrapper with settings dialog
-    ├── controls.tsx             # Canvas zoom/pan controls
-    ├── mention-input.tsx        # {{variable}} mention autocomplete
-    └── custom-nodes/           # Node type components
-        ├── agent/               # Agent node + settings + JSON schema editor
-        ├── start/               # Start node + settings
-        ├── end/                 # End node + settings
-        ├── if-else/             # If/Else node + settings
-        └── comment/             # Comment node (inline textarea)
+├── ui/                         # 27+ shadcn primitives
+├── ai-elements/                # Chat UI (Conversation, Message, PromptInput)
+├── workflow/
+│   ├── live-chat/              # Preview chat panel (Sheet + ChatPanel)
+│   ├── workflow-node.tsx       # Generic node wrapper with settings dialog
+│   ├── controls.tsx            # Canvas zoom/pan/select controls
+│   ├── mention-input.tsx       # {{variable}} mention autocomplete
+│   └── custom-nodes/           # Node type components and settings
+│       ├── agent/              # Agent node + settings + JSON schema editor
+│       ├── start/              # Start node + settings
+│       ├── end/                # End node + settings
+│       ├── if-else/            # If/Else node + settings
+│       └── comment/            # Comment node (inline textarea)
 context/
-├── workflow-context.tsx         # Live node/edge state, variable resolution
-└── query-provider.tsx           # TanStack QueryClient provider
+├── workflow-context.tsx        # Live node/edge state, variable resolution
+└── query-provider.tsx          # TanStack QueryClient provider
 features/
 └── use-workflow.ts             # React Query hooks (list, get, create, update)
 hooks/
-├── use-node-data.ts            # Local state with blur-based commit to React Flow
+├── use-node-data.ts            # Local state with blur-based commit
 ├── use-unsaved-change.ts       # Track unsaved changes against saved baseline
 ├── use-mobile.ts               # Responsive breakpoint detection
-├── use-as-ref.ts               # Stable callback refs for mutable props
+├── use-as-ref.ts               # Stable callback refs
 ├── use-isomorphic-layout-effect.ts  # SSR-safe useLayoutEffect
 └── __tests__/
 store/
@@ -108,6 +122,8 @@ lib/
 ├── auth-cache.ts               # Redis-cached user lookup
 ├── compose-refs.ts             # React ref composition utility
 └── workflow/node-config.ts     # Node type definitions, configs, factory
+patches/
+└── next-themes+0.4.6.patch     # patch-package fix for next-themes
 proxy.ts                         # Kinde auth middleware
 ```
 
@@ -159,6 +175,7 @@ npm run dev
 | `npm run test:watch` | Watch mode |
 | `npm run test:ci` | CI verbose output |
 | `npm run test:coverage` | Run with coverage report |
+| `postinstall` | Prisma generate + patch-package |
 
 ## Workflow Nodes
 
@@ -171,7 +188,7 @@ npm run dev
 | If/Else | Conditional branching | Yes | Yes | Yes |
 | Comment | Annotation | Yes | Yes | Inline textarea |
 | End | Terminal | Yes | Yes | Yes |
-| HTTP | API request | Yes | (in palette only) | — |
+| HTTP | API request | (in palette only) | — | — |
 
 ## State Management
 
@@ -179,7 +196,7 @@ Three layers:
 
 1. **Zustand** (`store/workflow-store.ts`) — Canonical "saved" state. Stores `savedNodes`/`savedEdges` after a successful save to compare against current canvas state.
 
-2. **React Context** (`context/workflow-context.tsx`) — Live working state for the open workflow. Provides `nodes`, `setNodes`, `edges`, `setEdges`, `view`, and `getVariablesForNode()`.
+2. **React Context** (`context/workflow-context.tsx`) — Live working state for the open workflow. Provides `nodes`, `setNodes`, `edges`, `setEdges`, `view` (edit/preview), and `getVariablesForNode()`.
 
 3. **TanStack React Query** (`features/use-workflow.ts`) — Server state. Queries and mutations for workflow CRUD. Automatically caches and invalidates.
 
@@ -192,6 +209,7 @@ Three layers:
 | POST | `/api/workflow` | Yes | 20 req / 60s per user | Create workflow (name required) |
 | GET | `/api/workflow/:id` | Yes | None | Get single workflow with parsed flowObject |
 | PUT | `/api/workflow/:id` | Yes | None | Save workflow nodes/edges to flowObject |
+| POST | `/api/chat` | — | — | Chat completion (endpoint referenced by preview panel) |
 
 - Rate limiting uses Upstash Redis (sliding window) with in-memory fallback when Redis is unavailable.
 - All API routes have `maxDuration = 60s` configured for serverless deployment.
