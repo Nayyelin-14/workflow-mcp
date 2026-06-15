@@ -18,7 +18,7 @@
     "postinstall": "prisma generate && patch-package"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.205",
+    "@ai-sdk/react": "^3.0.207",
     "@diceui/tags-input": "^0.7.2",
     "@hookform/resolvers": "^5.4.0",
     "@kinde-oss/kinde-auth-nextjs": "^2.12.2",
