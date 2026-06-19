@@ -58,6 +58,12 @@ jobs:
       - run: npm run build
         env:
           DATABASE_URL: mongodb://dummy/dummy
+          KINDE_CLIENT_ID: dummy
+          KINDE_CLIENT_SECRET: dummy
+          KINDE_ISSUER_URL: https://dummy.kinde.com
+          KINDE_SITE_URL: http://localhost:3000
+          KINDE_POST_LOGIN_REDIRECT_URL: http://localhost:3000/workflow
+          KINDE_POST_LOGOUT_REDIRECT_URL: http://localhost:3000/
 
   deploy:
     if: github.event_name == 'push'
