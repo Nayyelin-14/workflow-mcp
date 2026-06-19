@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   deployments: write
 
@@ -28,6 +29,21 @@ jobs:
             exit 1
           fi
 
+      - name: Check CI status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CONCLUSION=$(gh run list \
+            --workflow=CI \
+            --commit=${{ github.sha }} \
+            --json conclusion \
+            --jq '.[0].conclusion')
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "CI status is '$CONCLUSION' — deploy blocked"
+            exit 1
+          fi
+          echo "CI passed for this commit"
+
   deploy:
     name: Deploy to ${{ needs.gate.outputs.environment }}
     runs-on: ubuntu-latest
@@ -36,26 +52,23 @@ jobs:
     environment:
       name: ${{ needs.gate.outputs.environment }}
       url: ${{ steps.vercel.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
+      - uses: ./.github/actions/setup
 
       - name: Pull Vercel environment
-        run: npx vercel pull --yes --environment=${{ needs.gate.outputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel pull --yes --environment=${{ needs.gate.outputs.environment }}
 
       - name: Build project artifacts
-        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build
 
       - name: Deploy to Vercel
         id: vercel
         run: |
-          URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
+          URL=$(npx vercel deploy --prebuilt \
             ${{ needs.gate.outputs.environment == 'production' && '--prod' || '' }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
