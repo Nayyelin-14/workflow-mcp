@@ -114,3 +114,10 @@ jobs:
           npx vercel rollback --yes
           echo "✓ Rolled back"
           exit 1
+
+  ci-passed:
+    if: always()
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI passed"
