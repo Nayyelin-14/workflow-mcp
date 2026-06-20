@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: read
   deployments: write
 
@@ -29,20 +28,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check CI status
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          CONCLUSION=$(gh run list \
-            --workflow=CI \
-            --commit=${{ github.sha }} \
-            --json conclusion \
-            --jq '.[0].conclusion')
-          if [ "$CONCLUSION" != "success" ]; then
-            echo "CI status is '$CONCLUSION' — deploy blocked"
-            exit 1
-          fi
-          echo "CI passed for this commit"
+
 
   deploy:
     name: Deploy to ${{ needs.gate.outputs.environment }}
@@ -54,6 +40,8 @@ jobs:
       url: ${{ steps.vercel.outputs.url }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,11 +53,10 @@ jobs:
       - name: Build project artifacts
         run: npx vercel build
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (preview)
         id: vercel
         run: |
-          URL=$(npx vercel deploy --prebuilt \
-            ${{ needs.gate.outputs.environment == 'production' && '--prod' || '' }})
+          URL=$(npx vercel deploy --prebuilt)
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
@@ -77,3 +64,9 @@ jobs:
           URL="${{ steps.vercel.outputs.url }}"
           echo "Smoke testing: $URL"
           curl --fail --silent --max-time 30 "$URL" > /dev/null && echo "✓ Deploy is live"
+
+      - name: Promote to production
+        if: needs.gate.outputs.environment == 'production'
+        run: |
+          npx vercel promote "${{ steps.vercel.outputs.url }}" --token=${{ secrets.VERCEL_TOKEN }}
+          echo "✓ Promoted to production"

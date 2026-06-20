@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { generateID } from "../helper";
 import { MODELS } from "../constants";
+import { ExecuteStartNode } from "@/components/workflow/custom-nodes/start/startnode-executor";
+import { ExecuteAgentNode } from "@/components/workflow/custom-nodes/agent/agentnode-executor";
 
 export const NodeTypeEnum = {
   START: "start",
@@ -30,6 +32,11 @@ type NodeConfigBase = {
 
   inputs: Record<string, any>;
   outputs: string[];
+};
+
+export const NODE_EXECUTORS = {
+  [NodeTypeEnum.START]: () => ExecuteStartNode,
+  [NodeTypeEnum.AGENT]: () => ExecuteAgentNode,
 };
 
 export const NODE_CONFIG: Record<NodeType, NodeConfigBase> = {
@@ -122,7 +129,13 @@ export const getNodeConfig = (type: NodeType) => {
 
   return nodeType;
 };
+export const getNodeExecutor = (type: NodeType) => {
+  const nodeExecutor = NODE_EXECUTORS?.[type as keyof typeof NODE_EXECUTORS];
 
+  if (!nodeExecutor) return null;
+
+  return nodeExecutor;
+};
 export type NodeSettingsProps = {
   nodeId: string;
   data: Record<string, unknown>;
