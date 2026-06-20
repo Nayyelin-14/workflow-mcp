@@ -3,9 +3,10 @@ import { Node } from "@xyflow/react";
 import React from "react";
 
 export const ExecuteStartNode = (node: Node, context: ExecutorContextType) => {
+  const startOutput = context.outputs[node.id] as { input?: string } | undefined;
   return {
     output: {
-      input: context.outputs[node.id]?.input || "",
+      input: startOutput?.input || "",
     },
   };
 };

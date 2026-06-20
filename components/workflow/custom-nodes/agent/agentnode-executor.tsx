@@ -32,6 +32,7 @@ export const ExecuteAgentNode = async (
     outputFormat === "json" && responseSchema
       ? {
           output: Output.object({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             schema: convertJsonSchemaToZod(responseSchema as any),
           }),
         }

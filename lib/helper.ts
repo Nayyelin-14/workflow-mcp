@@ -9,7 +9,7 @@ export function generateID(type: string): string {
 
 export function replacesdVariables(
   template: string,
-  variables: Record<string, any>,
+  variables: Record<string, unknown>,
 ) {
   return Mustache.render(template, variables);
 }

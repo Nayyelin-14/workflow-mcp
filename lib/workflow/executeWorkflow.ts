@@ -8,7 +8,7 @@ const executeWorkflow = async (
   edges: Edge[],
   userInput: string,
   messages: UIMessage[],
-  channel: any,
+  channel: ExecutorContextType["channel"],
   workflowRunId: string,
 ) => {
   const startNode = nodes.find((n) => n.type === NodeTypeEnum.START);

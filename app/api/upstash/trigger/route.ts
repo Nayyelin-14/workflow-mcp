@@ -25,6 +25,7 @@ export async function POST(request: Request) {
         workflowId,
         messages,
       },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     return NextResponse.json({

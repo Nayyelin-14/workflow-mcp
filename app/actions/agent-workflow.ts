@@ -19,13 +19,14 @@ export async function streamAgentAction({
   model: string;
   instructions: string;
   history: UIMessage[];
-  jsonOutput?: any;
+  jsonOutput?: Record<string, unknown>;
   selectedTools: Array<
     | { type: "native"; value: string }
     | { type: "mcp"; value: string; tools: [] }
   >;
 }) {
   const modelMessage = await convertToModelMessages(history);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tools: Record<string, any> = {};
 
   for (const t of selectedTools.filter((t) => t.type === "native")) {
