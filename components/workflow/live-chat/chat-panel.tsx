@@ -29,6 +29,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
+import { createWorkFlowTransport } from "@/lib/transport";
 const ChatPanel = ({ workflowId }: { workflowId: string }) => {
   const [input, setInput] = useState<string>("");
   const [chatId, setChatId] = useState<string | null>(() =>
@@ -38,8 +39,8 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
   const { messages, sendMessage, status } = useChat<UIMessage>({
     id: chatId ?? undefined,
     messages: [],
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
+    transport: createWorkFlowTransport({
+      workflowId,
     }),
   });
 
@@ -68,7 +69,9 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
        via-primary/90 to-primary/80 px-4 py-3 relative"
       >
         <div className="flex items-center justify-between text-white">
-          <h5 className="text-sm font-semibold tracking-tight">Workflow Preview</h5>
+          <h5 className="text-sm font-semibold tracking-tight">
+            Workflow Preview
+          </h5>
           <Button
             variant={"ghost"}
             size={"sm"}

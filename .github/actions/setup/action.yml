@@ -5,7 +5,7 @@ inputs:
   node-version:
     description: Node.js version
     required: false
-    default: "20"
+    default: "22"
   restore-next-cache:
     description: Restore .next/cache (wasteful for lint/typecheck/test jobs)
     required: false
@@ -28,7 +28,7 @@ runs:
         path: |
           ~/.cache/prisma
           lib/generated/prisma
-        key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
+        key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma', 'package-lock.json') }}
         restore-keys: |
           prisma-${{ runner.os }}-
 

@@ -21,7 +21,7 @@ const LiveChat = ({ workflowId }: { workflowId: string }) => {
           side="right"
           className="w-[calc(100%-1rem)]! sm:max-w-sm! p-0
           bottom-4! right-4! top-auto!
-          h-[520px]! max-h-[calc(100dvh-8rem)] z-95 bg-background
+          h-130! max-h-[calc(100dvh-8rem)] z-95 bg-background
           rounded-xl overflow-hidden shadow-2xl border border-border/30"
           showCloseButton={false}
           overlayClass="bg-black/10! backdrop-blur-[2px]!"

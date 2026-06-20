@@ -111,7 +111,7 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
   const handleSaveChanges = () => {
     updateWorkFlowAction({ nodes, edges });
   };
-
+console.log(nodes, edges)
   return (
     <>
       <div className="relative flex flex-1 h-full overflow-hidden">
