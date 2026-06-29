@@ -1,0 +1,10 @@
+{
+  "GHSA-8gw3-rxh4-v6jx": {
+    "active": true,
+    "notes": "expr-eval prototype pollution — no fix available. Usage is limited to sandboxed comparison operators (==, !=, >, <, >=, <=)."
+  },
+  "GHSA-jc85-fpwf-qm7x": {
+    "active": true,
+    "notes": "expr-eval unrestricted functions — no fix available. Usage is sandboxed with predefined operators."
+  }
+}

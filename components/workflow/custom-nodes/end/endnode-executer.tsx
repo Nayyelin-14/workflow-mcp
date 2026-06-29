@@ -1,8 +1,6 @@
-import { ExecutorContextType } from "@/types/workflow";
 import { Node } from "@xyflow/react";
-import React from "react";
 
-export const ExecuteEndNode = (node: Node, context: ExecutorContextType) => {
+export const ExecuteEndNode = (node: Node) => {
   console.log(`\n=== End Node [${node.id}] ===`);
   const text = node?.data.value as string;
   console.log("End value:", text);

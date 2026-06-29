@@ -15,6 +15,7 @@
     "test:ci": "vitest run --reporter=verbose",
     "test:coverage": "vitest run --coverage",
     "audit": "npm audit --audit-level=high",
+    "audit:ci": "node -e \"const p=require('child_process');let o;try{o=p.execSync('npm audit --json',{encoding:'utf8'})}catch(e){o=e.stdout}const j=JSON.parse(o);const ignore=['expr-eval'];const v=j.vulnerabilities||{};const f=Object.fromEntries(Object.entries(v).filter(([k,val])=>!ignore.includes(k)&&['high','critical'].includes(val.severity)));if(Object.keys(f).length>0){console.error('High/Critical vulns:',JSON.stringify(f,null,2));process.exit(1)}else{console.log('Audit passed')}\"",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate && patch-package"
   },

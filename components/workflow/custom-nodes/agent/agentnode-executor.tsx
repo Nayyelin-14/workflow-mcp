@@ -12,7 +12,7 @@ export const ExecuteAgentNode = async (
 ) => {
   console.log(`\n=== Agent Node [${node.id}] ===`);
   console.log("Agent data:", JSON.stringify(node.data, null, 2));
-  const { outputs, channel, history } = context;
+  const { channel, history } = context;
 
   const {
     instructions,
@@ -80,7 +80,7 @@ export const ExecuteAgentNode = async (
       return {
         output: JSON.parse(text),
       };
-    } catch (error) {
+    } catch {
       throw new Error("Failed to parse JSON output");
     }
   }

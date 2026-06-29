@@ -13,7 +13,8 @@ export const createWorkFlowTransport = ({
     async prepareSendMessagesRequest({ messages }) {
       console.log("\n--- prepareSendMessagesRequest ---");
       console.log("Sending messages count:", messages.length);
-      console.log("Last message:", messages[messages.length - 1]?.content?.substring(0, 50));
+      const lastPart = messages[messages.length - 1]?.parts?.find(p => p.type === 'text');
+      console.log("Last message:", (lastPart && 'text' in lastPart ? lastPart.text : '(no text)')?.substring(0, 50));
       return {
         body: { workflowId, messages },
       };

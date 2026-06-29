@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     };
     console.log("Trigger payload:", JSON.stringify(triggerPayload, null, 2));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { workflowRunId } = await client.trigger(triggerPayload as any);
     console.log("✅ Workflow triggered! Run ID:", workflowRunId);
 

@@ -31,7 +31,7 @@ export const GET = async (req: Request) => {
       await channel.subscribe({
         events: ["workflow.chunk"],
         history: true,
-        onData({ data, event, channel }) {
+          onData({ data }) {
           console.log("SSE sending chunk:", JSON.stringify(data).substring(0, 100));
           controller.enqueue(
             encofer.encode(`data : ${JSON.stringify(data)}\n\n`),
