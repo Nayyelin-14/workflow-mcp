@@ -11,9 +11,16 @@ const baseUrl = process.env.VERCEL_URL
   : `http://localhost:3000`;
 
 export async function POST(request: Request) {
+  console.log("\n==============================================");
+  console.log("📨 TRIGGER ROUTE HIT: POST /api/upstash/trigger");
+  console.log("==============================================");
+
   const { workflowId, messages } = await request.json();
+  console.log("Received workflowId:", workflowId);
+  console.log("Messages count:", messages?.length);
+
   try {
-    const { workflowRunId } = await client.trigger({
+    const triggerPayload = {
       url: `${baseUrl}/api/workflow/live-chat`,
       retries: 3,
       keepTriggerConfig: true,
@@ -25,14 +32,19 @@ export async function POST(request: Request) {
         workflowId,
         messages,
       },
+    };
+    console.log("Trigger payload:", JSON.stringify(triggerPayload, null, 2));
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    const { workflowRunId } = await client.trigger(triggerPayload as any);
+    console.log("✅ Workflow triggered! Run ID:", workflowRunId);
 
     return NextResponse.json({
       success: true,
       workflowRunId: workflowRunId,
     });
   } catch (error) {
+    console.error("❌ Failed to trigger workflow:", error);
     return NextResponse.json(
       {
         success: false,

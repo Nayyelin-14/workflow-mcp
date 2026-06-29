@@ -32,30 +32,39 @@ const OPERATORS = [
 const IfElseNodeSettings = ({ nodeId, data }: NodeSettingsProps) => {
   const { updateNodeData } = useReactFlow();
   const conditions = (data?.conditions as Condition[]) || [];
+
+  console.log(`[UI:IfElseSettings] Opening settings for node: ${nodeId}`);
+  console.log(`[UI:IfElseSettings] Current conditions:`, JSON.stringify(conditions, null, 2));
+
   const condition_label = (index: number) => {
     if (index === 0) return "If";
     return "Else If";
   };
 
   const handleAddCondition = () => {
+    console.log(`[UI:IfElseSettings] Adding condition to node ${nodeId}`);
+    const newConditions = [
+      ...conditions,
+      {
+        caseName: "",
+        variable: "",
+        operator: "",
+      },
+    ];
+    console.log(`[UI:IfElseSettings] New conditions count: ${newConditions.length}`);
     updateNodeData(nodeId, {
-      conditions: [
-        ...conditions,
-        {
-          caseName: "",
-          variable: "",
-          operator: "",
-        },
-      ],
+      conditions: newConditions,
     });
     toast.info("New condition added");
   };
   const handleRemoveCondition = (index: number) => {
+    console.log(`[UI:IfElseSettings] Removing condition ${index} from node ${nodeId}`);
     if (conditions.length > 1) {
       const updatedConditions = conditions.filter((_, i) => i !== index);
       updateNodeData(nodeId, {
         conditions: updatedConditions,
       });
+      console.log(`[UI:IfElseSettings] Condition removed. Remaining: ${updatedConditions.length}`);
       toast.warning("Selected condition removed");
     }
   };
@@ -65,6 +74,7 @@ const IfElseNodeSettings = ({ nodeId, data }: NodeSettingsProps) => {
     conditionField: keyof Condition,
     conditionValue: string,
   ) => {
+    console.log(`[UI:IfElseSettings] Updating condition ${index}: ${conditionField} = "${conditionValue}"`);
     const updateConditions = [...conditions];
     updateConditions[index] = {
       ...updateConditions[index],

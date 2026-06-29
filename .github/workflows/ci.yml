@@ -29,7 +29,7 @@ jobs:
           - name: Tests
             script: test:ci
           - name: Audit
-            script: audit
+            script: audit:ci
 
     steps:
       - uses: actions/checkout@v4
