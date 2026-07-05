@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I{} echo {})",
+      "Bash(npx vitest *)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('/home/sabaisabai/pj/workflow-mcp/node_modules/radix-ui/dist/index.js'\\)\\).filter\\(k=>/Collapsible/i.test\\(k\\)\\)\\)\")"
+    ]
+  }
+}
