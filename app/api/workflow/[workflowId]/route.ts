@@ -100,3 +100,41 @@ export async function PUT(
     return serverErrorResponse();
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ workflowId: string }> },
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) return unauthorizedResponse();
+
+    const { workflowId } = await params;
+
+    const workflow = await withTimeout(
+      prisma.workflow.findUnique({
+        where: { id: workflowId },
+      }),
+      55_000,
+      req.signal,
+    );
+
+    if (!workflow || workflow.userId !== user.id) {
+      return NextResponse.json(
+        { error: true, message: "Not found" },
+        { status: 404 },
+      );
+    }
+
+    await withTimeout(
+      prisma.workflow.delete({ where: { id: workflowId } }),
+      55_000,
+      req.signal,
+    );
+
+    return NextResponse.json({ success: true, message: "Workflow deleted" });
+  } catch (error) {
+    console.error("DELETE /api/workflow/[workflowId]:", error);
+    return serverErrorResponse();
+  }
+}

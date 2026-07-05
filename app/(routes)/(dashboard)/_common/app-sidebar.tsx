@@ -7,7 +7,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Settings, WorkflowIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -29,10 +28,9 @@ const AppSideBar = () => {
     },
   ];
   return (
-    <Sidebar>
-      <SidebarHeader className="flex flex-row items-center justify-center px-4">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="flex flex-row items-center justify-center px-4 group-data-[collapsible=icon]:px-2">
         <Logo />
-        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent className="px-2 pt-2">
         <SidebarMenu>
@@ -42,6 +40,7 @@ const AppSideBar = () => {
                 isActive={pathName === item.url}
                 className="data-[active=true]:bg-primary/10"
                 onClick={() => router.push(item.url)}
+                tooltip={item.title}
               >
                 <item.icon />
                 <span>{item.title}</span>

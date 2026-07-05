@@ -21,6 +21,19 @@ const WorkflowContext = createContext<WorkflowContextType | undefined>(
   undefined,
 );
 
+// If/Else nodes used to expose a generic "source-1" handle in addition to
+// their per-condition handles. That handle was removed, so edges saved
+// against it point at a handle that no longer exists and can never render.
+function sanitizeEdges(nodes: Node[], edges: Edge[]) {
+  return edges.filter((edge) => {
+    const sourceNode = nodes.find((n) => n.id === edge.source);
+    return !(
+      sourceNode?.type === NodeTypeEnum.IF_ELSE &&
+      edge.sourceHandle === "source-1"
+    );
+  });
+}
+
 export function WorkflowProvider({
   workflowId,
   initialNodes,
@@ -40,13 +53,15 @@ export function WorkflowProvider({
   const [nodes, setNodes] = useState<Node[]>(() =>
     initialNodes?.length ? initialNodes : [start_node],
   );
-  const [edges, setEdges] = useState<Edge[]>(initialEdges ?? []);
+  const [edges, setEdges] = useState<Edge[]>(() =>
+    sanitizeEdges(initialNodes ?? [], initialEdges ?? []),
+  );
 
   useEffect(() => {
     if (initialNodes?.length) {
       /* eslint-disable react-hooks/set-state-in-effect */
       setNodes(initialNodes);
-      setEdges(initialEdges ?? []);
+      setEdges(sanitizeEdges(initialNodes, initialEdges ?? []));
       /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [workflowId, initialNodes, initialEdges]);

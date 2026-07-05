@@ -7,9 +7,13 @@ const Logo = () => {
       <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
         <span>F</span>
       </div>
-      <div className="flex items-center">
-        <span className="font-black text-primary text-lg">Flow</span>
-        <span className="font-black text-foreground text-lg">agent.ai</span>
+      <div className="flex items-center overflow-hidden group-data-[collapsible=icon]:hidden">
+        <span className="font-black text-primary text-lg whitespace-nowrap">
+          Flow
+        </span>
+        <span className="font-black text-foreground text-lg whitespace-nowrap">
+          agent.ai
+        </span>
       </div>
     </Link>
   );

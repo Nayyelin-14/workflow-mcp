@@ -64,6 +64,7 @@ export async function POST(req: Request) {
           userId: user.id,
           name: name.trim(),
           description: description ?? "",
+          flowObject: JSON.stringify({ nodes: [], edges: [] }),
         },
       }),
       55_000,

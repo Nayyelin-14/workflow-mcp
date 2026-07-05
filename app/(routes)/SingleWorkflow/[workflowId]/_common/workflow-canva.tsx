@@ -141,6 +141,7 @@ console.log(nodes, edges)
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            defaultEdgeOptions={{ type: "smoothstep" }}
             defaultViewport={{ x: 0, y: 0, zoom: 1.2 }}
             nodeTypes={nodeTypes}
             onDrop={onDrop}

@@ -34,7 +34,7 @@ export const GET = async (req: Request) => {
           onData({ data }) {
           console.log("SSE sending chunk:", JSON.stringify(data).substring(0, 100));
           controller.enqueue(
-            encofer.encode(`data : ${JSON.stringify(data)}\n\n`),
+            encofer.encode(`data: ${JSON.stringify(data)}\n\n`),
           );
           if (data.type === "finish") {
             console.log("SSE stream complete (finish event)");
@@ -62,6 +62,9 @@ export const { POST } = serve(
     console.log("\n==============================================");
     console.log("⚡ WORKFLOW SERVE HANDLER TRIGGERED (QStash callback)");
     console.log("==============================================");
+    console.log("=============", context, "=============");
+    console.log("==============================================");
+
     console.log("Workflow Run ID:", context.workflowRunId);
 
     const { workflowId, messages } = context.requestPayload as {
