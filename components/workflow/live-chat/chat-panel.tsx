@@ -49,9 +49,9 @@ type NodeDataType = {
   status: "loading" | "error" | "complete";
   type: "text-delta" | "tool-call" | "tool-result";
   toolCall?: { name: string };
-  toolResult?: { name: string; result: any };
-  output?: any;
-  error?: any;
+  toolResult?: { name: string; result: unknown };
+  output?: unknown;
+  error?: unknown;
 };
 
 const ChatPanel = ({ workflowId }: { workflowId: string }) => {
