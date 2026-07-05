@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   LogoutLink,
   useKindeBrowserClient,
@@ -24,7 +25,7 @@ const AppHeader = () => {
   return (
     <div className="border-b border-border bg-background">
       <div className="mx-auto flex h-11 w-full max-w-6xl items-center justify-between px-4 lg:px-0">
-        <div />
+        <SidebarTrigger />
         <div className="flex items-center gap-4">
           <Button
             className="relative size-8 cursor-pointer rounded-full"

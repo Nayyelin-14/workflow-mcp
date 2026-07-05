@@ -37,10 +37,10 @@ type NodeConfigBase = {
 };
 
 export const NODE_EXECUTORS = {
-  [NodeTypeEnum.START]: () => ExecuteStartNode,
-  [NodeTypeEnum.AGENT]: () => ExecuteAgentNode,
-  [NodeTypeEnum.IF_ELSE]: () => ExecuteIfElseNode,
-  [NodeTypeEnum.END]: () => ExecuteEndNode,
+  [NodeTypeEnum.START]: ExecuteStartNode,
+  [NodeTypeEnum.AGENT]: ExecuteAgentNode,
+  [NodeTypeEnum.IF_ELSE]: ExecuteIfElseNode,
+  [NodeTypeEnum.END]: ExecuteEndNode,
 };
 
 export const NODE_CONFIG: Record<NodeType, NodeConfigBase> = {
@@ -135,7 +135,10 @@ export const getNodeConfig = (type: NodeType) => {
     return null;
   }
 
-  console.log(`[node-config] Found config for "${type}":`, JSON.stringify(nodeType, null, 2));
+  console.log(
+    `[node-config] Found config for "${type}":`,
+    JSON.stringify(nodeType, null, 2),
+  );
   return nodeType;
 };
 export const getNodeExecutor = (type: NodeType) => {

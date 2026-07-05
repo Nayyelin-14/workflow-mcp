@@ -37,6 +37,11 @@ export async function POST(request: Request) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { workflowRunId } = await client.trigger(triggerPayload as any);
+    // The Client.trigger() method sends the payload to QStash's HTTP API.
+    // 1. Generates a unique workflowRunId (a string like "wf_xxx")
+    // 2. Returns it immediately in the response
+    // 3. Enqueues the message for delivery
+    // 4. QStash will asynchronously POST to {baseUrl}/api/workflow/live-chat with the body { workflowId, messages }
     console.log("✅ Workflow triggered! Run ID:", workflowRunId);
 
     return NextResponse.json({

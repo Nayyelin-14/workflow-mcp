@@ -13,8 +13,16 @@ export const createWorkFlowTransport = ({
     async prepareSendMessagesRequest({ messages }) {
       console.log("\n--- prepareSendMessagesRequest ---");
       console.log("Sending messages count:", messages.length);
-      const lastPart = messages[messages.length - 1]?.parts?.find(p => p.type === 'text');
-      console.log("Last message:", (lastPart && 'text' in lastPart ? lastPart.text : '(no text)')?.substring(0, 50));
+      const lastPart = messages[messages.length - 1]?.parts?.find(
+        (p) => p.type === "text",
+      );
+      console.log(
+        "Last message:",
+        (lastPart && "text" in lastPart
+          ? lastPart.text
+          : "(no text)"
+        )?.substring(0, 50),
+      );
       return {
         body: { workflowId, messages },
       };
@@ -37,6 +45,9 @@ export const createWorkFlowTransport = ({
       console.log("Init body:", init?.body);
 
       const triggerResponse = await fetch(input, init);
+      // POST /api/upstash/trigger
+      // input = "/api/upstash/trigger"
+      // init = { method: "POST", body: JSON.stringify({ workflowId: "abc123", messages: [...] }) }
       console.log("Trigger response status:", triggerResponse.status);
 
       const triggerData = await triggerResponse.json();
@@ -46,9 +57,11 @@ export const createWorkFlowTransport = ({
       const sseUrl = `/api/workflow/live-chat?id=${workflowRunId}`;
       console.log("Connecting to SSE stream:", sseUrl);
 
-      return fetch(sseUrl, {
+      const sseData = fetch(sseUrl, {
         method: "GET",
       });
+      console.log("WHAT SSE looks like", sseData);
+      return sseData;
     },
   });
 };

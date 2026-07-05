@@ -144,7 +144,7 @@ const WorkflowNode = ({
               <BaseHandle
                 id={"target-1"}
                 type="target"
-                className="size-2!"
+                className="size-2.5! hover:scale-125 transition-transform"
                 position={Position.Left}
               />
             )}
@@ -152,7 +152,7 @@ const WorkflowNode = ({
               <BaseHandle
                 id={"source-1"}
                 type="source"
-                className="size-2!"
+                className="size-2.5! hover:scale-125 transition-transform"
                 position={Position.Right}
               />
             )}

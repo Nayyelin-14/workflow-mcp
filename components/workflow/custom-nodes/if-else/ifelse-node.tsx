@@ -35,7 +35,7 @@ const IfElseNode = (props: NodeProps) => {
         isDeleteable={false}
         handles={{
           target: true,
-          source: true,
+          source: false,
         }}
         icon={GitBranchIcon}
         settingTitle="If / Else"
@@ -58,7 +58,7 @@ const IfElseNode = (props: NodeProps) => {
                 type="source"
                 position={Position.Right}
                 id={`condition-${index}`}
-                className="size-2 -right-1.25"
+                className="size-2.5 -right-1.5 hover:scale-125 transition-transform"
               />
             </div>
           );
@@ -70,7 +70,7 @@ const IfElseNode = (props: NodeProps) => {
             type="source"
             position={Position.Right}
             id={`else`}
-            className="size-2 -left-1.25"
+            className="size-2.5 -right-1.5 hover:scale-125 transition-transform"
           />
         </div>
       </WorkflowNode>
