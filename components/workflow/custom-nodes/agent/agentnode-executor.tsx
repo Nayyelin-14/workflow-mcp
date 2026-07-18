@@ -166,7 +166,7 @@ export const ExecuteAgentNode = async (
   if (!fullText && toolResults.length > 0) {
     const lastUserMsg = [...history].reverse().find((m) => m.role === "user");
     const userText =
-      (lastUserMsg?.parts as any)?.find((p: any) => p.type === "text")?.text ||
+      (lastUserMsg?.parts as Array<{ type: string; text?: string }>)?.find((p) => p.type === "text")?.text ||
       "";
     const toolSummary = toolResults
       .map((tr) => `${tr.name} returned: ${JSON.stringify(tr.result).substring(0, 2000)}`)

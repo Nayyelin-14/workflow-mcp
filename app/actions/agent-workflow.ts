@@ -33,7 +33,9 @@ function buildSystemPrompt(
   return prompt;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractAgentContent(parts: any[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const content: any[] = [];
 
   parts
@@ -83,7 +85,7 @@ function convertToModelMessages(history: UIMessage[]): ModelMessage[] {
   return history
     .map((msg) => {
       const text =
-        (msg.parts as any)?.find((p: any) => p.type === "text")?.text || "";
+        (msg.parts as Array<{ type: string; text?: string }>)?.find((p) => p.type === "text")?.text || "";
       if (!text) return null;
       return { role: msg.role as "user" | "assistant", content: text };
     })
@@ -155,7 +157,7 @@ function getAssistantContext(history: UIMessage[]): string {
   const prevPart = [...history]
     .reverse()
     .find((m) => m.role === "assistant")
-    ?.parts?.find((p: any) => p.type === "text") as
+    ?.parts?.find((p): p is { type: "text"; text: string } => p.type === "text") as
     | { type: "text"; text: string }
     | undefined;
   const prevText = prevPart?.text || "";
