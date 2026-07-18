@@ -1,0 +1,17 @@
+#!/bin/sh
+
+protected_branches="qa main"
+
+while read local_ref local_oid remote_ref remote_oid; do
+  for branch in $protected_branches; do
+    if echo "$remote_ref" | grep -q "refs/heads/$branch$"; then
+      echo ""
+      echo "  ⛔ Blocked: Direct push to '$branch' is not allowed."
+      echo "     Create a Pull Request instead so CI can verify."
+      echo ""
+      exit 1
+    fi
+  done
+done
+
+exit 0
