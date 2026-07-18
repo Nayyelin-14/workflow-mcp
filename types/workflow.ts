@@ -8,6 +8,7 @@ export type ExecutorContextType = {
   history: UIMessage[];
   workflowRunId: string;
   channel: Channel;
+  signal?: AbortSignal;
 };
 export type ExecutorResultType = {
   output: unknown;

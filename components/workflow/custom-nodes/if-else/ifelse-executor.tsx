@@ -72,10 +72,15 @@ export const ExecuteIfElseNode = (node: Node, context: ExecutorContextType) => {
       continue;
     }
 
-    const variable = replacesdVariables(condition.variable, outputs);
-    const conditionValue = condition.value ?? "";
+    const variable = replacesdVariables(condition.variable, outputs).trim();
+    let conditionValue = condition.value?.trim() ?? "";
+    conditionValue = conditionValue.replace(/^"|"$/g, "");
 
-    const result = evaluateCondition(variable, condition.operator, conditionValue);
+    const result = evaluateCondition(
+      variable,
+      condition.operator,
+      conditionValue,
+    );
 
     if (result) {
       return {
@@ -96,3 +101,28 @@ export const ExecuteIfElseNode = (node: Node, context: ExecutorContextType) => {
     },
   };
 };
+// Here's exactly what happens in your workflow "customer agent":
+// The Node agent-F18QACcHMO ("Classification Agent")
+// Its output format is JSON, with this schema:
+// {
+//   "classification": { "enum": ["return_item", "cancel_subscription", "get_information"] }
+// }
+// When this agent runs, it asks the LLM to classify the user's message and returns something like:
+// { output: { classification: "return_item" } }
+// // or
+// { output: { classification: "cancel_subscription" } }
+// // or
+// { output: { classification: "get_information" } }
+// So {{agent-F18QACcHMO.output.classification}}
+// This is a placeholder that gets replaced at runtime with the actual classification string. For example:
+// - If the user says "I want to return my order" → the agent returns classification: "return_item" → the placeholder becomes "return_item"
+// - If the user says "Cancel my subscription" → it becomes "cancel_subscription"
+// How It's Used
+// The If/Else node if_else-VH5NwrDqGJ has 3 conditions that each check this value:
+// Condition	Checks if	Routes to
+// condition-0	{{...classification}} = "return_item"	Return Agent
+// condition-1	{{...classification}} = "cancel_subscription"	Retention Agent
+// condition-2	{{...classification}} = "get_information"	Information Agent
+// else	(none matched)	End
+// Summary
+// {{agent-F18QACcHMO.output.classification}} = the category the Classification Agent chose — one of "return_item", "cancel_subscription", or "get_information". It's just a way to pass the agent's result into the if/else conditions so your workflow can branch based on what the user wants.

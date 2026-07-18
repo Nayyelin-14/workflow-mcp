@@ -9,6 +9,7 @@ import {
   MessageSquare,
   PlusIcon,
   SparkleIcon,
+  Square,
 } from "lucide-react";
 import {
   Conversation,
@@ -60,7 +61,7 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
     crypto.randomUUID(),
   );
 
-  const { messages, sendMessage, status } = useChat<UIMessage>({
+  const { messages, sendMessage, status, stop } = useChat<UIMessage>({
     id: chatId ?? undefined,
     messages: [],
     transport: createWorkFlowTransport({
@@ -151,6 +152,7 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
                               <NodeDisplay
                                 key={`${msg.id}-workflow-${index}`}
                                 data={p.data as NodeDataType}
+                                streamEnded={!isThisMessageStreaming}
                               />
                             );
                           default:
@@ -203,14 +205,27 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
                 onChange={(e) => setInput(e.target.value)}
               />
             </PromptInputBody>
-            <PromptInputFooter className="flex justify-end p-2 ">
-              <PromptInputSubmit
-                disabled={!input.trim() || isLoading}
-                className="h-8! w-8! p-0! 
-              rounded-lg! bg-primary! text-primary-foreground"
-              >
-                <ArrowUp size={16} />
-              </PromptInputSubmit>
+            <PromptInputFooter className="flex justify-end p-2 gap-2">
+              {status === "streaming" ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => stop()}
+                  className="h-8! px-2! rounded-lg!"
+                >
+                  <Square size={14} className="mr-1" fill="currentColor" />
+                  Stop
+                </Button>
+              ) : (
+                <PromptInputSubmit
+                  disabled={!input.trim() || isLoading}
+                  className="h-8! w-8! p-0! 
+                rounded-lg! bg-primary! text-primary-foreground"
+                >
+                  <ArrowUp size={16} />
+                </PromptInputSubmit>
+              )}
             </PromptInputFooter>
           </PromptInput>
         </div>
@@ -221,6 +236,7 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
 
 type NodeDisplayDataType = {
   data: NodeDataType;
+  streamEnded?: boolean;
 };
 
 function summarizeOutput(output: unknown): string | null {
@@ -238,11 +254,12 @@ function summarizeOutput(output: unknown): string | null {
   return null;
 }
 
-export const NodeDisplay = ({ data }: NodeDisplayDataType) => {
+export const NodeDisplay = ({ data, streamEnded }: NodeDisplayDataType) => {
   const nodeConfig = getNodeConfig(data.nodeType);
   if (!nodeConfig) return null;
   const Icon = nodeConfig.icon;
   const { status, output, error, toolCall, toolResult } = data;
+  const effectiveStatus = streamEnded && status === "loading" ? "complete" : status;
 
   const summary = summarizeOutput(output);
   const showRawOutput = output != null && !summary;
@@ -253,12 +270,12 @@ export const NodeDisplay = ({ data }: NodeDisplayDataType) => {
         className={cn(
           "flex size-6 shrink-0 items-center justify-center rounded-md text-white",
           nodeConfig.color,
-          status === "loading" && "animate-pulse",
+          effectiveStatus === "loading" && "animate-pulse",
         )}
       >
-        {status === "loading" ? (
+        {effectiveStatus === "loading" ? (
           <Spinner className="size-3.5" />
-        ) : status === "error" ? (
+        ) : effectiveStatus === "error" ? (
           <AlertCircleIcon className="size-3.5" />
         ) : (
           <Icon className="size-3.5" />
@@ -292,7 +309,7 @@ export const NodeDisplay = ({ data }: NodeDisplayDataType) => {
           </div>
         )}
 
-        {status === "error" && (
+        {effectiveStatus === "error" && (
           <div className="mt-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {typeof error === "string" ? error : JSON.stringify(error)}
           </div>

@@ -1,9 +1,10 @@
 import { streamAgentAction, generateAgentText } from "@/app/actions/agent-workflow";
 import { MODELS } from "@/lib/constants";
+import { openrouter } from "@/lib/openrouter";
 import { replacesdVariables } from "@/lib/helper";
 import { ExecutorContextType } from "@/types/workflow";
 import { Node } from "@xyflow/react";
-import { Output } from "ai";
+import { Output, generateText } from "ai";
 import { convertJsonSchemaToZod } from "zod-from-json-schema";
 
 export const ExecuteAgentNode = async (
@@ -12,7 +13,7 @@ export const ExecuteAgentNode = async (
 ) => {
   console.log(`\n=== Agent Node [${node.id}] ===`);
   console.log("Agent data:", JSON.stringify(node.data, null, 2));
-  const { channel, history } = context;
+  const { channel, history, signal } = context;
 
   const {
     instructions,
@@ -40,11 +41,17 @@ export const ExecuteAgentNode = async (
         }
       : undefined;
 
+  if (signal?.aborted) {
+    console.log(`[Agent] Node ${node.id} cancelled before starting`);
+    return { output: { text: "" } };
+  }
+
   const result = await streamAgentAction({
     model,
     instructions: replacedInstructions,
     history,
     jsonOutput,
+    signal,
     selectedTools: selectedTools as Array<
       | { type: "native"; value: string }
       | { type: "mcp"; value: string; tools: [] }
@@ -86,8 +93,13 @@ export const ExecuteAgentNode = async (
   }
 
   let fullText = "";
+  const toolResults: { name: string; result: unknown }[] = [];
   try {
     for await (const chunk of result.fullStream) {
+      if (signal?.aborted) {
+        console.log(`[Agent] Node ${node.id} cancelled during stream`);
+        break;
+      }
       const c = chunk as { type: string; text?: string; toolName?: string; toolCallId?: string; output?: unknown; message?: string; error?: unknown };
       if (c.type === "text-delta" || c.type === "text") {
         fullText += c.text ?? "";
@@ -117,11 +129,12 @@ export const ExecuteAgentNode = async (
             nodeName: node.data.label,
             status: "loading",
             type: "tool-call",
-            output: fullText,
+            ...(fullText ? { output: fullText } : {}),
             toolCall: { name: c.toolName! },
           },
         });
       } else if (c.type === "tool-result") {
+        toolResults.push({ name: c.toolName!, result: c.output });
         await channel.emit("workflow.chunk", {
           type: "data-workflow-Node",
           id: node.id,
@@ -131,7 +144,7 @@ export const ExecuteAgentNode = async (
             nodeName: node.data.label,
             status: "loading",
             type: "tool-result",
-            output: fullText,
+            ...(fullText ? { output: fullText } : {}),
             toolResult: {
               toolCallId: c.toolCallId!,
               name: c.toolName!,
@@ -143,6 +156,33 @@ export const ExecuteAgentNode = async (
     }
   } catch (e) {
     console.error(`[Agent] Stream iteration error for node ${node.id}:`, e);
+  }
+
+  if (signal?.aborted) {
+    console.log(`[Agent] Node ${node.id} returning early due to cancellation`);
+    return { output: { text: fullText || "" } };
+  }
+
+  if (!fullText && toolResults.length > 0) {
+    const lastUserMsg = [...history].reverse().find((m) => m.role === "user");
+    const userText =
+      (lastUserMsg?.parts as any)?.find((p: any) => p.type === "text")?.text ||
+      "";
+    const toolSummary = toolResults
+      .map((tr) => `${tr.name} returned: ${JSON.stringify(tr.result).substring(0, 2000)}`)
+      .join("\n\n");
+    const prompt = `The webSearch returned these results for "${userText}":\n\n${toolSummary}\n\nSummarize these results for the user.`;
+    try {
+      const { text } = await generateText({
+        model: openrouter.chat(model),
+        messages: [{ role: "user", content: prompt }],
+        maxOutputTokens: 2000,
+        abortSignal: signal,
+      });
+      fullText = text ?? "";
+    } catch (e) {
+      console.error(`[Agent] Failed to get summary after tool call:`, e);
+    }
   }
 
   if (!fullText) {
@@ -162,6 +202,7 @@ export const ExecuteAgentNode = async (
         instructions: replacedInstructions,
         history,
         jsonOutput,
+        signal,
         selectedTools: selectedTools as Array<
           | { type: "native"; value: string }
           | { type: "mcp"; value: string; tools: [] }

@@ -9,6 +9,8 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { Separator } from "../ui/separator";
+import AutoLayoutButton from "./controls/auto-layout-button";
+import AlignmentTools from "./controls/alignment-tools";
 
 export const TOOL_MODE_ENUM = {
   SELECT: "select",
@@ -67,6 +69,9 @@ const Controls = ({ toolMode, setToolMode }: props) => {
           <PlusIcon size={16} />
         </Button>
       </div>
+      <Separator orientation="vertical" className="h-4" />
+      <AutoLayoutButton />
+      <AlignmentTools />
       <Separator orientation="vertical" className="h-4" />
       <Button
         size={"icon"}

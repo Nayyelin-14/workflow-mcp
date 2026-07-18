@@ -146,6 +146,8 @@ console.log(nodes, edges)
             nodeTypes={nodeTypes}
             onDrop={onDrop}
             onDragOver={onDragOver}
+            snapToGrid={true}
+            snapGrid={[20, 20]}
             panOnScroll={!isSelectMode}
             panOnDrag={!isSelectMode}
             zoomOnScroll={!isSelectMode}

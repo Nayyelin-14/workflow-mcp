@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { realtime } from "@/lib/realtime";
+import { cancelWorkflow } from "@/lib/cancel";
 import { executeWorkflow } from "@/lib/workflow/executeWorkflow";
 import { Client } from "@upstash/qstash";
 import { serve } from "@upstash/workflow/nextjs";
@@ -43,7 +44,8 @@ export const GET = async (req: Request) => {
         },
       });
       req.signal.addEventListener("abort", () => {
-        console.log("SSE connection aborted by client");
+        console.log("SSE connection aborted by client — cancelling workflow");
+        cancelWorkflow(workflowRunId);
         controller.close();
       });
       console.log("SSE stream established");

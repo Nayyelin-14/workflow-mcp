@@ -59,6 +59,7 @@ export const createWorkFlowTransport = ({
 
       const sseData = fetch(sseUrl, {
         method: "GET",
+        signal: init?.signal,
       });
       console.log("WHAT SSE looks like", sseData);
       return sseData;

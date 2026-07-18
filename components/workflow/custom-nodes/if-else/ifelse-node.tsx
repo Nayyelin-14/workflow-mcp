@@ -32,7 +32,7 @@ const IfElseNode = (props: NodeProps) => {
         subText="Condition"
         nodeId={id}
         selected={selected}
-        isDeleteable={false}
+        isDeleteable={true}
         handles={{
           target: true,
           source: false,
