@@ -1,11 +1,16 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [qa, main]
 
 permissions:
   contents: read
   deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   gate:
@@ -19,6 +24,7 @@ jobs:
         id: check
         run: |
           BRANCH="${{ github.ref_name }}"
+
           if [[ "$BRANCH" == "main" ]]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == "qa" ]]; then
@@ -27,8 +33,6 @@ jobs:
             echo "Branch $BRANCH is not deployable"
             exit 1
           fi
-
-
 
   deploy:
     name: Deploy to ${{ needs.gate.outputs.environment }}
@@ -44,6 +48,8 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - uses: ./.github/actions/setup
 
