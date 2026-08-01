@@ -46,6 +46,21 @@ npm run dev
 
 See [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) for full environment variable descriptions.
 
+### QStash: local vs production
+
+Workflow runs are triggered through **Upstash QStash**, which calls back into your deployed app — so it needs a publicly reachable URL. Locally, this is handled by Upstash's built-in development server:
+
+| Setting | Local dev | Production (Vercel) |
+|---------|-----------|---------------------|
+| `QSTASH_DEV` | `true` | unset / `false` |
+| `QSTASH_BASE_URL` | not used (dev server auto-managed) | real QStash region URL |
+| `QSTASH_TOKEN` | not used | real token |
+| `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | not used | real signing keys |
+
+With `QSTASH_DEV=true`, the `@upstash/workflow` SDK auto-downloads and starts a local QStash dev server on first use, and the live chat preview in `/SingleWorkflow/[id]` works against `http://localhost:3000` with no tunnel or account. No code changes are needed — `app/api/upstash/trigger/route.ts` already falls back to `localhost:3000` when `VERCEL_URL` is unset.
+
+> Note: `VERCEL_PROTECTION_BYPASS_TOKEN` is only needed when QStash calls a Vercel preview deployment that has protection enabled.
+
 ## Documentation
 
 - [Architecture](./docs/ARCHITECTURE.md) — directory tree, state management

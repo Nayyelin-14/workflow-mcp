@@ -25,7 +25,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", "font-sans", dm_Sans.variable)}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <QueryProvider>
           <KindeProvider>
             <ThemeProvider
