@@ -135,6 +135,8 @@ export const { POST } = serve(
   {
     qstashClient: new Client({
       token: process.env.QSTASH_TOKEN!,
+      devMode:
+        process.env.QSTASH_DEV === "true" || process.env.QSTASH_DEV === "1",
       headers: {
         "x-vercel-protection-bypass":
           process.env.VERCEL_PROTECTION_BYPASS_TOKEN!,

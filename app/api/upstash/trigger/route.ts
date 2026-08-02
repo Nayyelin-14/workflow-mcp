@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 const client = new Client({
   baseUrl: process.env.QSTASH_BASE_URL!,
   token: process.env.QSTASH_TOKEN!,
+  devMode: process.env.QSTASH_DEV === "true" || process.env.QSTASH_DEV === "1",
 });
 
 const baseUrl = process.env.VERCEL_URL

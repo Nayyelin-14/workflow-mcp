@@ -167,9 +167,9 @@ const WorkflowNode = ({
           >
             <DialogHeader className="px-4">
               <DialogTitle>{settingTitle || `${label} Settings`}</DialogTitle>
-              {settingDescription && (
-                <DialogDescription>{settingDescription}</DialogDescription>
-              )}{" "}
+              <DialogDescription>
+                {settingDescription || `Configure the ${label} node`}
+              </DialogDescription>
             </DialogHeader>
 
             <div className="px-4 space-y-4 h-full max-h-[65vh] overflow-y-auto">
