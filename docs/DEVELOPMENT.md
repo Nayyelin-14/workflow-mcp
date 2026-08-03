@@ -18,11 +18,15 @@
 | `KINDE_SITE_URL` | App URL (http://localhost:3000) |
 | `KINDE_POST_LOGIN_REDIRECT_URL` | Post-login redirect |
 | `KINDE_POST_LOGOUT_REDIRECT_URL` | Post-logout redirect |
+| `KINDE_GOOGLE_CONNECTION_ID` | Kinde Google connection ID (skips the connection chooser on the custom sign-in page) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL (for rate limiting) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 | `OPENROUTER_API_KEY` | OpenRouter API key for AI model access |
 | `QSTASH_TOKEN` | Upstash QStash token for workflow triggering |
 | `QSTASH_BASE_URL` | Upstash QStash base URL |
+| `QSTASH_CURRENT_SIGNING_KEY` | QStash current HMAC signing key (callback verification) |
+| `QSTASH_NEXT_SIGNING_KEY` | QStash next HMAC signing key (key rotation) |
+| `QSTASH_DEV` | `true` for local dev (auto-manages a local QStash dev server); unset for production |
 | `VERCEL_PROTECTION_BYPASS_TOKEN` | Vercel Protection Bypass token (for QStash calls to preview deploys) |
 
 ## Scripts

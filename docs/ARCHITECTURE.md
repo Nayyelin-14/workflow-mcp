@@ -4,6 +4,8 @@
 app/
 ├── (routes)/
 │   ├── (landing)/              # Public landing page
+│   │   ├── page.tsx                # Landing page (CTAs → /sign-in)
+│   │   └── sign-in/                # Custom Kinde sign-in/sign-up page (Google)
 │   ├── (dashboard)/            # /workflow — workflow list
 │   └── SingleWorkflow/         # /workflow/[id] — visual editor
 │       └── [workflowId]/
@@ -13,9 +15,14 @@ app/
 │               ├── header.tsx          # Edit/preview toggle, save, delete
 │               ├── workflow-canva.tsx  # Main ReactFlow canvas
 │               └── NodePanel.tsx       # Drag-and-drop node palette
+├── actions/
+│   └── agent-workflow.ts       # Server actions (streamAgentAction, generateAgentText)
 ├── api/
 │   ├── auth/[kindeAuth]/       # Kinde auth handler
-│   └── workflow/               # CRUD endpoints (GET, POST, PUT, GET/:id)
+│   ├── workflow/               # CRUD endpoints (GET, POST, PUT, GET/:id, DELETE)
+│   │   ├── live-chat/              # SSE stream (GET) + QStash callback executor (POST)
+│   │   └── [workflowId]/           # GET/PUT/DELETE single workflow
+│   └── upstash/trigger/        # Enqueues a workflow run on QStash
 ├── error.tsx                   # Global error boundary
 ├── loading.tsx                 # Root loading state
 └── globals.css                 # Tailwind v4 + shadcn theme (oklch)

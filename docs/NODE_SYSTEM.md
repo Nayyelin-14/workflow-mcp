@@ -30,7 +30,7 @@ For example, if an Agent node outputs `response.text`, a downstream node can ref
 The Agent node is the most feature-rich:
 
 1. **System Instructions** — Free-form text with `{{variable}}` mention support for dynamic inputs.
-2. **Model Selection** — Choose from Gemini 2.0 Flash, Gemini 2.5 Flash Lite, Gemini 2.5 Flash, GPT-3.5 Turbo, or Claude 3 Haiku.
+2. **Model Selection** — Choose from Gemini 2.5 Flash Lite, Gemini 2.5 Flash, GPT-4o Mini, DeepSeek V3, or Claude 3 Haiku (via OpenRouter).
 3. **Tools** — Enable web search or connect to external MCP servers.
 4. **Output Format** — Text (free-form response) or JSON (structured output).
 5. **JSON Schema Editor** — When JSON format is selected, a visual schema builder lets you define fields (name, type, description) and enum values for structured responses.
