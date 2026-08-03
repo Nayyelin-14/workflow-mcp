@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { generateID } from "../helper";
 import { MODELS } from "../constants";
+import { ExecuteStartNode } from "@/components/workflow/custom-nodes/start/startnode-executor";
+import { ExecuteAgentNode } from "@/components/workflow/custom-nodes/agent/agentnode-executor";
+import { ExecuteIfElseNode } from "@/components/workflow/custom-nodes/if-else/ifelse-executor";
+import { ExecuteEndNode } from "@/components/workflow/custom-nodes/end/endnode-executer";
 
 export const NodeTypeEnum = {
   START: "start",
@@ -30,6 +34,13 @@ type NodeConfigBase = {
 
   inputs: Record<string, any>;
   outputs: string[];
+};
+
+export const NODE_EXECUTORS = {
+  [NodeTypeEnum.START]: ExecuteStartNode,
+  [NodeTypeEnum.AGENT]: ExecuteAgentNode,
+  [NodeTypeEnum.IF_ELSE]: ExecuteIfElseNode,
+  [NodeTypeEnum.END]: ExecuteEndNode,
 };
 
 export const NODE_CONFIG: Record<NodeType, NodeConfigBase> = {
@@ -116,13 +127,32 @@ export const NODE_CONFIG: Record<NodeType, NodeConfigBase> = {
 } as const;
 
 export const getNodeConfig = (type: NodeType) => {
+  console.log(`[node-config] getNodeConfig called for type: "${type}"`);
   const nodeType = NODE_CONFIG?.[type];
 
-  if (!nodeType) return null;
+  if (!nodeType) {
+    console.log(`[node-config] No config found for type: "${type}"`);
+    return null;
+  }
 
+  console.log(
+    `[node-config] Found config for "${type}":`,
+    JSON.stringify(nodeType, null, 2),
+  );
   return nodeType;
 };
+export const getNodeExecutor = (type: NodeType) => {
+  console.log(`[node-config] getNodeExecutor called for type: "${type}"`);
+  const nodeExecutor = NODE_EXECUTORS?.[type as keyof typeof NODE_EXECUTORS];
 
+  if (!nodeExecutor) {
+    console.log(`[node-config] No executor found for type: "${type}"`);
+    return null;
+  }
+
+  console.log(`[node-config] Found executor for "${type}"`);
+  return nodeExecutor;
+};
 export type NodeSettingsProps = {
   nodeId: string;
   data: Record<string, unknown>;
@@ -137,13 +167,21 @@ export function createNode({
   type,
   position = { x: 400, y: 200 },
 }: CreateNodeOptions) {
+  console.log(`\n=== Creating Node ===`);
+  console.log("Type:", type);
+  console.log("Position:", JSON.stringify(position));
+
   const config = getNodeConfig(type);
 
   if (!config) {
+    console.error(`No node config found for type: ${type}`);
     throw new Error(`No node config found ${type}`);
   }
+
   const id = generateID(type);
-  return {
+  console.log("Generated ID:", id);
+
+  const node = {
     id,
     type,
     position,
@@ -156,4 +194,7 @@ export function createNode({
       ...config.inputs,
     },
   };
+  console.log("Created node:", JSON.stringify(node, null, 2));
+  console.log("=== Node Created ===\n");
+  return node;
 }

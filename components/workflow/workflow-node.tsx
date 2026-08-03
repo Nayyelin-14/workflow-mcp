@@ -144,7 +144,7 @@ const WorkflowNode = ({
               <BaseHandle
                 id={"target-1"}
                 type="target"
-                className="size-2!"
+                className="size-2.5! hover:scale-125 transition-transform"
                 position={Position.Left}
               />
             )}
@@ -152,7 +152,7 @@ const WorkflowNode = ({
               <BaseHandle
                 id={"source-1"}
                 type="source"
-                className="size-2!"
+                className="size-2.5! hover:scale-125 transition-transform"
                 position={Position.Right}
               />
             )}
@@ -167,9 +167,9 @@ const WorkflowNode = ({
           >
             <DialogHeader className="px-4">
               <DialogTitle>{settingTitle || `${label} Settings`}</DialogTitle>
-              {settingDescription && (
-                <DialogDescription>{settingDescription}</DialogDescription>
-              )}{" "}
+              <DialogDescription>
+                {settingDescription || `Configure the ${label} node`}
+              </DialogDescription>
             </DialogHeader>
 
             <div className="px-4 space-y-4 h-full max-h-[65vh] overflow-y-auto">

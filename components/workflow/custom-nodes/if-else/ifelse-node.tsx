@@ -17,6 +17,10 @@ const IfElseNode = (props: NodeProps) => {
   const conditions = (data?.conditions as Condition[]) || [];
   const bgColor = data?.color as string;
 
+  console.log(`[UI:IfElseNode] Rendering node: ${id}`);
+  console.log(`[UI:IfElseNode] Conditions count: ${conditions.length}`);
+  console.log(`[UI:IfElseNode] Conditions data:`, JSON.stringify(conditions, null, 2));
+
   const conditionStyle = `relative flex items-center justify-end p-2  
   text-xs rounded-md bg-muted/50 border border-dashed border-border
    text-[11px] font-medium text-mutedf-foreground whitespace-nowrap`;
@@ -28,10 +32,10 @@ const IfElseNode = (props: NodeProps) => {
         subText="Condition"
         nodeId={id}
         selected={selected}
-        isDeleteable={false}
+        isDeleteable={true}
         handles={{
           target: true,
-          source: true,
+          source: false,
         }}
         icon={GitBranchIcon}
         settingTitle="If / Else"
@@ -54,7 +58,7 @@ const IfElseNode = (props: NodeProps) => {
                 type="source"
                 position={Position.Right}
                 id={`condition-${index}`}
-                className="size-2 -right-1.25"
+                className="size-2.5 -right-1.5 hover:scale-125 transition-transform"
               />
             </div>
           );
@@ -64,9 +68,9 @@ const IfElseNode = (props: NodeProps) => {
           <div className={conditionStyle}>Else</div>
           <BaseHandle
             type="source"
-            position={Position.Left}
+            position={Position.Right}
             id={`else`}
-            className="size-2 -left-1.25"
+            className="size-2.5 -right-1.5 hover:scale-125 transition-transform"
           />
         </div>
       </WorkflowNode>

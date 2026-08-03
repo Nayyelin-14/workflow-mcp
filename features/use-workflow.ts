@@ -1,5 +1,5 @@
 import { useWorkflowStore } from "@/store/workflow-store";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edge, Node } from "@xyflow/react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -43,7 +43,12 @@ export const useGetWorkflowById = (workflowId: string) => {
         flowObject: { nodes: Node[]; edges: Edge[] };
       };
       if (result?.flowObject) {
-        setSavedState(result.flowObject.nodes, result.flowObject.edges);
+        setSavedState(
+          result.flowObject.nodes ?? [],
+          result.flowObject.edges ?? [],
+        );
+      } else {
+        setSavedState([], []);
       }
       return result ?? null;
     },
@@ -57,16 +62,33 @@ type WorkflowPayload = {
   description?: string;
 };
 export const useCreateWorkFlow = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ name, description }: WorkflowPayload) =>
       axios
         .post("/api/workflow", { name, description })
         .then((res) => res.data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
       toast.success("Workflow created successfully");
     },
     onError: () => {
       toast.error("Failed to create workflow");
+    },
+  });
+};
+
+export const useDeleteWorkflow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (workflowId: string) =>
+      axios.delete(`/api/workflow/${workflowId}`).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      toast.success("Workflow deleted");
+    },
+    onError: () => {
+      toast.error("Failed to delete workflow");
     },
   });
 };

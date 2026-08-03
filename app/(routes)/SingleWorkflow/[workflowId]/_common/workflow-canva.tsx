@@ -69,8 +69,12 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
     [setEdges],
   );
   const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
+    (params: Connection) => {
+      console.log(`\n[UI:Canvas] Edge connected`);
+      console.log(`[UI:Canvas] Source: ${params.source} (handle: ${params.sourceHandle})`);
+      console.log(`[UI:Canvas] Target: ${params.target} (handle: ${params.targetHandle})`);
+      setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot));
+    },
     [setEdges],
   );
 
@@ -84,16 +88,21 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
       event.preventDefault();
       const node_type = event.dataTransfer.getData(DRAG_DATA_TYPE) as NodeType;
 
+      console.log(`\n[UI:Canvas] Node dropped on canvas`);
+      console.log(`[UI:Canvas] Node type: ${node_type}`);
+
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
+      console.log(`[UI:Canvas] Drop position:`, JSON.stringify(position));
 
       const newNode = createNode({
         type: node_type,
         position,
       });
 
+      console.log(`[UI:Canvas] Adding node to canvas:`, JSON.stringify(newNode, null, 2));
       setNodes((prev) => [...prev, newNode]);
     },
     [screenToFlowPosition, setNodes],
@@ -109,9 +118,14 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
     setEdges(result.edges);
   };
   const handleSaveChanges = () => {
+    console.log("\n[UI:Canvas] Saving workflow changes...");
+    console.log(`[UI:Canvas] Nodes count: ${nodes.length}`);
+    console.log(`[UI:Canvas] Edges count: ${edges.length}`);
+    console.log("[UI:Canvas] Nodes:", JSON.stringify(nodes.map(n => ({ id: n.id, type: n.type, data: n.data })), null, 2));
+    console.log("[UI:Canvas] Edges:", JSON.stringify(edges.map(e => ({ id: e.id, source: e.source, sourceHandle: e.sourceHandle, target: e.target })), null, 2));
     updateWorkFlowAction({ nodes, edges });
   };
-
+console.log(nodes, edges)
   return (
     <>
       <div className="relative flex flex-1 h-full overflow-hidden">
@@ -127,10 +141,13 @@ const WorkflowCanvas = ({ workflowId }: { workflowId: string }) => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            defaultEdgeOptions={{ type: "smoothstep" }}
             defaultViewport={{ x: 0, y: 0, zoom: 1.2 }}
             nodeTypes={nodeTypes}
             onDrop={onDrop}
             onDragOver={onDragOver}
+            snapToGrid={true}
+            snapGrid={[20, 20]}
             panOnScroll={!isSelectMode}
             panOnDrag={!isSelectMode}
             zoomOnScroll={!isSelectMode}

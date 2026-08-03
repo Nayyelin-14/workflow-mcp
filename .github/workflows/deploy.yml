@@ -7,6 +7,10 @@ permissions:
   contents: read
   deployments: write
 
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   gate:
     name: Gate check
@@ -19,6 +23,7 @@ jobs:
         id: check
         run: |
           BRANCH="${{ github.ref_name }}"
+
           if [[ "$BRANCH" == "main" ]]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == "qa" ]]; then
@@ -36,27 +41,27 @@ jobs:
     environment:
       name: ${{ needs.gate.outputs.environment }}
       url: ${{ steps.vercel.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v7
         with:
-          node-version: 20
-          cache: npm
+          ref: ${{ github.sha }}
 
-      - run: npm ci
+      - uses: ./.github/actions/setup
 
       - name: Pull Vercel environment
-        run: npx vercel pull --yes --environment=${{ needs.gate.outputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel pull --yes --environment=${{ needs.gate.outputs.environment }}
 
       - name: Build project artifacts
-        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (preview)
         id: vercel
         run: |
-          URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
-            ${{ needs.gate.outputs.environment == 'production' && '--prod' || '' }})
+          URL=$(npx vercel deploy --prebuilt)
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
@@ -64,3 +69,9 @@ jobs:
           URL="${{ steps.vercel.outputs.url }}"
           echo "Smoke testing: $URL"
           curl --fail --silent --max-time 30 "$URL" > /dev/null && echo "✓ Deploy is live"
+
+      - name: Promote to production
+        if: needs.gate.outputs.environment == 'production'
+        run: |
+          npx vercel promote "${{ steps.vercel.outputs.url }}" --token=${{ secrets.VERCEL_TOKEN }}
+          echo "✓ Promoted to production"

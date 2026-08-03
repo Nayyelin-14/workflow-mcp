@@ -9,15 +9,41 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { useGetWorkflows } from "@/features/use-workflow";
-import { WorkflowIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { useDeleteWorkflow, useGetWorkflows } from "@/features/use-workflow";
+import { Trash2Icon, WorkflowIcon } from "lucide-react";
 import CreateWorkflow from "../_common/createWorkflow";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { useState } from "react";
+
 const Page = () => {
   const router = useRouter();
   const { data, isPending } = useGetWorkflows();
   const workflows = data || [];
+  const { mutate: deleteWorkflow, isPending: isDeleting } =
+    useDeleteWorkflow();
+  const [workflowToDelete, setWorkflowToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (!workflowToDelete) return;
+    deleteWorkflow(workflowToDelete.id, {
+      onSuccess: () => setWorkflowToDelete(null),
+    });
+  };
+
   return (
     <div className="min-h-auto">
       <div className="py-6 flex flex-col gap-10">
@@ -41,12 +67,19 @@ const Page = () => {
           ) : workflows && workflows.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {workflows.map((w) => (
-                <Card
-                  className="cursor-pointer"
-                  key={w.id}
-                  onClick={() => router.push(`/SingleWorkflow/${w.id}`)}
-                >
-                  <CardContent className="space-y-5 ">
+                <Card className="relative group" key={w.id}>
+                  <Button
+                    variant={"ghost"}
+                    size={"icon-sm"}
+                    className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setWorkflowToDelete({ id: w.id, name: w.name })}
+                  >
+                    <Trash2Icon className="size-4" />
+                  </Button>
+                  <CardContent
+                    className="space-y-5 cursor-pointer"
+                    onClick={() => router.push(`/SingleWorkflow/${w.id}`)}
+                  >
                     <div>
                       <div className="relative mb-3">
                         <div className="flex items-center justify-center w-10 h-10  rounded-xl bg-primary/10 text-primary">
@@ -86,6 +119,38 @@ const Page = () => {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={!!workflowToDelete}
+        onOpenChange={(open) => !open && setWorkflowToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete workflow?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete &ldquo;{workflowToDelete?.name}
+              &rdquo;. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant={"outline"}
+              disabled={isDeleting}
+              onClick={() => setWorkflowToDelete(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={"destructive"}
+              disabled={isDeleting}
+              onClick={handleConfirmDelete}
+            >
+              {isDeleting && <Spinner />}
+              {isDeleting ? "Deleting" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

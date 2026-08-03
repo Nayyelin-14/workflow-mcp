@@ -5,23 +5,23 @@ export const DRAG_DATA_TYPE = "application/reactflow" as const;
 
 export const MODELS = [
   {
-    value: "google/gemini-2.0-flash-001",
-    label: "Gemini 2.0 Flash",
-  },
-  {
     value: "google/gemini-2.5-flash-lite",
-    label: "Gemini 2.5 Flash Lite",
+    label: "Gemini 2.5 Flash Lite (Good, Fast, Cheap)",
   },
   {
     value: "google/gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
   },
   {
-    value: "gpt-3.5-turbo",
-    label: "GPT-3.5 Turbo",
+    value: "openai/gpt-4o-mini",
+    label: "GPT-4o Mini (Cheap & Fast)",
   },
   {
-    value: "claude-3-haiku",
+    value: "deepseek/deepseek-chat",
+    label: "DeepSeek V3",
+  },
+  {
+    value: "anthropic/claude-3-haiku",
     label: "Claude 3 Haiku (Fast)",
   },
 ];
