@@ -84,7 +84,7 @@ export const executeWorkflow = async (
   const startNode = nodes.find((n) => n.type === NodeTypeEnum.START);
   if (!startNode) throw new Error("Start node is not found in the workflow");
 
-  const cancelledInRedis = await redis.get(`cancel:${workflowRunId}`);
+  const cancelledInRedis = await redis?.get(`cancel:${workflowRunId}`);
   if (cancelledInRedis) {
     console.log(`[Workflow] Cancelled before start (Redis flag)`);
     await channel.emit("workflow.chunk", {

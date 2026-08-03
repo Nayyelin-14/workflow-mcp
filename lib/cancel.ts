@@ -9,7 +9,7 @@ export function cancelWorkflow(workflowRunId: string) {
     controllers.set(workflowRunId, controller);
   }
   controller.abort();
-  redis.set(`cancel:${workflowRunId}`, "1", { ex: 120 }).catch(() => {});
+  redis?.set(`cancel:${workflowRunId}`, "1", { ex: 120 }).catch(() => {});
 }
 
 export function getWorkflowAbortSignal(workflowRunId: string): AbortSignal {
@@ -23,5 +23,5 @@ export function getWorkflowAbortSignal(workflowRunId: string): AbortSignal {
 
 export function cleanupWorkflow(workflowRunId: string) {
   controllers.delete(workflowRunId);
-  redis.del(`cancel:${workflowRunId}`).catch(() => {});
+  redis?.del(`cancel:${workflowRunId}`).catch(() => {});
 }
