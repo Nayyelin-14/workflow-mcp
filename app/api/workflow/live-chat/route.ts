@@ -134,6 +134,7 @@ export const { POST } = serve(
   },
   {
     qstashClient: new Client({
+      baseUrl: process.env.QSTASH_BASE_URL!,
       token: process.env.QSTASH_TOKEN!,
       devMode:
         process.env.QSTASH_DEV === "true" || process.env.QSTASH_DEV === "1",
