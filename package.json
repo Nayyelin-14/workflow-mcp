@@ -23,7 +23,7 @@
     "@ai-sdk/react": "^3.0.205",
     "@diceui/tags-input": "^0.7.2",
     "@exalabs/ai-sdk": "^2.1.0",
-    "@hookform/resolvers": "^5.4.0",
+    "@hookform/resolvers": "^5.5.7",
     "@kinde-oss/kinde-auth-nextjs": "^2.12.2",
     "@openrouter/ai-sdk-provider": "^6.0.0-alpha.1",
     "@openrouter/sdk": "^1.1.13",
