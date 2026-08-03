@@ -1,9 +1,10 @@
 name: CI
 
 on:
+  # CI runs only on PRs. Direct pushes to qa/main are blocked by branch
+  # protection, and merges are already gated by the required PR check, so the
+  # duplicate post-merge push run is intentionally omitted.
   pull_request:
-    branches: [qa, main]
-  push:
     branches: [qa, main]
 
 permissions:

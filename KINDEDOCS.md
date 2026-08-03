@@ -537,7 +537,7 @@ All auth-related variables (from `.env` / `.env.example`):
 Optional / production-only:
 | Variable | Purpose | Notes |
 |---|---|---|
-| `VERCEL_PROTECTION_BYPASS_TOKEN` | Allows QStash/SSE to hit a protected Vercel preview | Not auth flow — used by `app/api/upstash/trigger/route.ts` and `lib` QStash client headers |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | Allows QStash/SSE to hit a protected Vercel deployment (auto-injected when "Protection Bypass for Automation" is enabled) | Not auth flow — used by `app/api/upstash/trigger/route.ts` and `app/api/workflow/live-chat/route.ts`; falls back to legacy `VERCEL_PROTECTION_BYPASS_TOKEN` |
 | `VERCEL_OIDC_TOKEN` | Vercel workload identity (present in `.env.local`) | Deployment-level; not used by Kinde flow |
 
 Non-auth vars present in `.env` (for context): `DATABASE_URL`, `OPENROUTER_API_KEY`,

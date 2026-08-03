@@ -139,7 +139,9 @@ export const { POST } = serve(
         process.env.QSTASH_DEV === "true" || process.env.QSTASH_DEV === "1",
       headers: {
         "x-vercel-protection-bypass":
-          process.env.VERCEL_PROTECTION_BYPASS_TOKEN!,
+          process.env.VERCEL_AUTOMATION_BYPASS_SECRET ||
+          process.env.VERCEL_PROTECTION_BYPASS_TOKEN ||
+          "",
       },
     }),
   },

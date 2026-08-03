@@ -27,7 +27,9 @@ export async function POST(request: Request) {
       keepTriggerConfig: true,
       headers: {
         "x-vercel-protection-bypass":
-          process.env.VERCEL_PROTECTION_BYPASS_TOKEN || "",
+          process.env.VERCEL_AUTOMATION_BYPASS_SECRET ||
+          process.env.VERCEL_PROTECTION_BYPASS_TOKEN ||
+          "",
       },
       body: {
         workflowId,
