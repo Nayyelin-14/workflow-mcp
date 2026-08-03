@@ -40,7 +40,7 @@ jobs:
         if: steps.guard.outputs.skip == 'false'
         run: |
           SHA="${{ github.event.deployment.ref }}"
-          BRANCHES="$(gh api repos/${{ github.repository }}/commits/$SHA/branches-where-head --jq -r '.[].name')"
+          BRANCHES="$(gh api repos/${{ github.repository }}/commits/$SHA/branches-where-head --jq '.[].name')"
           echo "Deployment SHA $SHA is the head of: ${BRANCHES:-<none>}"
           if echo "$BRANCHES" | grep -qx 'qa'; then
             echo "env_name=preview" >> "$GITHUB_OUTPUT"

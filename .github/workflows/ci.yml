@@ -32,7 +32,7 @@ jobs:
             script: audit:ci
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup
         with:
@@ -48,7 +48,7 @@ jobs:
     timeout-minutes: 10
     needs: [code-quality]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: npm run build
         env:
