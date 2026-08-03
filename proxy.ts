@@ -2,7 +2,8 @@ import { withAuth } from "@kinde-oss/kinde-auth-nextjs/middleware";
 
 export default withAuth(async function proxy() {}, {
   // Middleware still runs on all routes, but doesn't protect the blog route
-  publicPaths: ["/", "/api/upstash/trigger", "/api/workflow/live-chat"],
+  publicPaths: ["/", "/api/auth", "/api/upstash/trigger", "/api/workflow/live-chat"],
+  loginPage: "/sign-in",
 });
 
 export const config = {

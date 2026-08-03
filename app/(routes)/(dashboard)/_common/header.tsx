@@ -63,7 +63,10 @@ const AppHeader = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuItem className="cursor-pointer">
-                  <LogoutLink className="flex w-full items-center gap-1">
+                  <LogoutLink
+                    postLogoutRedirectURL="/"
+                    className="flex w-full items-center gap-1"
+                  >
                     <LogOutIcon className="h-4 w-4" />
                     <span>Logout</span>
                   </LogoutLink>
