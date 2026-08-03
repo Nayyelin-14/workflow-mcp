@@ -27,7 +27,7 @@
 | `QSTASH_CURRENT_SIGNING_KEY` | QStash current HMAC signing key (callback verification) |
 | `QSTASH_NEXT_SIGNING_KEY` | QStash next HMAC signing key (key rotation) |
 | `QSTASH_DEV` | `true` for local dev (auto-manages a local QStash dev server); unset for production |
-| `VERCEL_PROTECTION_BYPASS_TOKEN` | Vercel Protection Bypass token (for QStash calls to preview deploys) |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | Vercel Protection Bypass secret (auto-injected when "Protection Bypass for Automation" is enabled); falls back to `VERCEL_PROTECTION_BYPASS_TOKEN` |
 
 ## Scripts
 

@@ -59,7 +59,7 @@ Workflow runs are triggered through **Upstash QStash**, which calls back into yo
 
 With `QSTASH_DEV=true`, the `@upstash/workflow` SDK auto-downloads and starts a local QStash dev server on first use, and the live chat preview in `/SingleWorkflow/[id]` works against `http://localhost:3000` with no tunnel or account. No code changes are needed — `app/api/upstash/trigger/route.ts` already falls back to `localhost:3000` when `VERCEL_URL` is unset.
 
-> Note: `VERCEL_PROTECTION_BYPASS_TOKEN` is only needed when QStash calls a Vercel preview deployment that has protection enabled.
+> Note: `VERCEL_AUTOMATION_BYPASS_SECRET` (auto-injected by Vercel when "Protection Bypass for Automation" is enabled under Settings → Deployment Protection) is needed when QStash calls a protected deployment. The code falls back to the legacy `VERCEL_PROTECTION_BYPASS_TOKEN` name if set.
 
 ## Documentation
 
