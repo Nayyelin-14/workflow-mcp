@@ -21,7 +21,7 @@ Flowagent.ai is an open-source visual AI workflow builder that lets you create m
 | Framework | Next.js 16 (App Router), React 19 |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix Nova) |
-| Auth | Kinde (OAuth / magic link) |
+| Auth | Kinde (Google OAuth, custom sign-in page) |
 | Database | MongoDB via Prisma ORM |
 | Query | TanStack React Query v5 |
 | Canvas | React Flow (@xyflow/react) |

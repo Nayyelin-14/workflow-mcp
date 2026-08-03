@@ -15,10 +15,12 @@
 
 ### Provider
 - **Kinde** is the identity provider. It is the only auth provider in the app.
-- The app uses Kinde's **hosted login/sign-up screens** (the codebase does *not*
-  ship custom login pages). The Kinde dashboard's `Authentication experience` →
-  *Use your own sign-up and sign-in screens* toggle is **off**, so all auth UI is
-  rendered on Kinde's domain (`https://nay2002.kinde.com`).
+- The app ships **custom sign-in/sign-up UI** at `/sign-in` (`app/(routes)/(landing)/sign-in/`),
+  rendered on our own domain. It offers a single **"Continue with Google"** button that uses
+  `RegisterLink` with `connection_id=KINDE_GOOGLE_CONNECTION_ID` to skip Kinde's connection
+  chooser. There is no hosted Kinde login screen in the flow (the Kinde dashboard's *Use your own
+  sign-up and sign-in screens* toggle is on; the middleware is configured with
+  `loginPage: "/sign-in"`).
 - Kinde issues standard OpenID Connect / OAuth 2.0 **JWT**s (ID token + access
   token) after the user authenticates.
 
@@ -59,20 +61,23 @@ SDK handlers (SDK-internal map in `dist/src/handlers/auth.cjs.js`):
 
 **Routes that are public (excluded from auth):**
 - `/` (landing page) — `app/(routes)/(landing)/page.tsx`
+- `/sign-in` — `app/(routes)/(landing)/sign-in/page.tsx` (custom login page; public so it renders for unauthenticated users)
+- `/api/auth` — all Kinde auth handlers (login/register/callback/logout)
 - `/api/upstash/trigger` — `app/api/upstash/trigger/route.ts` (QStash webhook target)
 - `/api/workflow/live-chat` — `app/api/workflow/live-chat/route.ts` (SSE stream)
 
 ### Middleware involved
 - **`proxy.ts`** is the Next.js middleware file (root of repo). It wraps
   `withAuth()` from `@kinde-oss/kinde-auth-nextjs/middleware`. It:
-  - Protects every matched route **except** `publicPaths: ["/", "/api/upstash/trigger", "/api/workflow/live-chat"]`.
-  - Redirects unauthenticated users to the Kinde login flow.
+  - Protects every matched route **except** `publicPaths: ["/", "/api/auth", "/api/upstash/trigger", "/api/workflow/live-chat"]`.
+  - Redirects unauthenticated users to the **custom login page** via `loginPage: "/sign-in"`.
   - Excludes `_next` assets and static files via the `config.matcher` regex.
 
 ### Authentication flow overview
 ```
 Browser ──GET──▶ /workflow (or any protected route)
-        ◀─302── /api/auth/login?post_login_redirect_url=...
+        ◀─302── /sign-in (loginPage)
+        ──click── RegisterLink → /api/auth/register?post_login_redirect_url=/workflow&connection_id=...
         ──302── https://nay2002.kinde.com/oauth2/auth?client_id=...&redirect_uri=...&code_challenge=...
         ──302── Google (account chooser) ──▶ back to Kinde
         ──302── http://localhost:3000/api/auth/kinde_callback?code=...
@@ -91,24 +96,25 @@ on the landing page, or directly visits a protected page (e.g. `/workflow`).
 ### Step-by-step
 
 **Step 1 — User clicks a login trigger**
-- **Page/component:** `app/(routes)/(landing)/page.tsx` renders `<LoginLink>` at
-  lines 17, 20, 36 (`import { LoginLink } from "@kinde-oss/kinde-auth-nextjs"`).
-  Alternatively, the middleware redirect (Step 2) triggers the same flow.
-- **Function:** `LoginLink` is an SDK component. It renders an `<a>` whose
-  `href` is built by the SDK as:
+- **Page/component:** `app/(routes)/(landing)/page.tsx` renders plain `<Link href="/sign-in">`
+  ("Sign in" / "Get Started"). Alternatively, the middleware redirect (Step 2) lands on the same
+  custom page.
+- **Function:** `/sign-in` renders `<SignInForm>` (`app/(routes)/(landing)/sign-in/page.tsx` →
+  `sign-in-form.tsx`), a client component with a toggle between **Sign in** and **Sign up**. Both
+  modes render a single `<RegisterLink>` (the Kinde SDK component) whose `href` is built as:
   ```
-  /api/auth/login?post_login_redirect_url=<current-route-or-configured-redirect>
+  /api/auth/register?post_login_redirect_url=/workflow&connection_id=<KINDE_GOOGLE_CONNECTION_ID>
   ```
-  (verified: `href: ${config.apiPath}/${routes.login}${query}` in
-  `dist/src/components/LoginLink.cjs.js`).
-- **HTTP:** `GET` navigation (client-side link click → browser GET).
+  (`RegisterLink` uses the SDK's register route; `authUrlParams` injects `connection_id` so the
+  Kinde connection chooser is skipped and Google is used directly.)
+- **HTTP:** `GET` navigation (client-side link click → browser GET to `/api/auth/register`).
 - **File handling:** `app/api/auth/[kindeAuth]/route.ts` → `handleAuth()` →
-  SDK `login` handler.
+  SDK `register` handler.
 
-**Step 2 — `GET /api/auth/login`**
-- **Function:** SDK `login` handler (`dist/src/handlers/login.cjs.js`).
-- **Parameters:** query string (e.g. `post_login_redirect_url`).
-- **Response:** HTTP `302` redirect to the Kinde authorize endpoint:
+**Step 2 — `GET /api/auth/register`**
+- **Function:** SDK `register` handler (`dist/src/handlers/register.cjs.js`).
+- **Parameters:** query string (e.g. `post_login_redirect_url`, `connection_id`).
+- **Response:** HTTP `302` redirect to the Kinde authorize endpoint in sign-up mode:
   ```
   https://nay2002.kinde.com/oauth2/auth
     ?client_id=<KINDE_CLIENT_ID>
@@ -118,15 +124,17 @@ on the landing page, or directly visits a protected page (e.g. `/workflow`).
     &state=<opaque-random>            (stored in ac-state-key cookie)
     &code_challenge=<S256 of verifier>  (PKCE)
     &code_challenge_method=S256
+    &connection_id=conn_...           (when present, Google is preselected)
   ```
 - **Cookies created:** `ac-state-key` (OAuth state, for CSRF/state validation).
   Confirmed SDK OAuth settings: `grantType: "AUTHORIZATION_CODE"`,
   `responseType: "code"`, `codeChallengeMethod: "S256"` (PKCE enabled by SDK).
 - **Session changes:** none yet (no session exists).
 
-**Step 3 — Kinde hosted screen**
-- Kinde renders its hosted sign-in/sign-up page on `nay2002.kinde.com` with the
-  enabled connections (Google, per your dashboard). The user picks **Google**.
+**Step 3 — Kinde authorize screen**
+- Kinde renders its authorize page on `nay2002.kinde.com`. Because the app passes
+  `connection_id=KINDE_GOOGLE_CONNECTION_ID`, the **Google** connection is preselected and the
+  user is sent straight to Google's account chooser (no connection picker step).
 
 **Step 4 — Google account selection**
 - The browser is redirected to Google's own OAuth screen (`accounts.google.com`).
@@ -176,9 +184,9 @@ on the landing page, or directly visits a protected page (e.g. `/workflow`).
 ### Summary table
 | # | Trigger | Function | URL (method) | Response |
 |---|---|---|---|---|
-| 1 | `LoginLink` click | SDK component | `/api/auth/login` (GET) | 302 |
-| 2 | login handler | SDK `login` | Kinde `/oauth2/auth` (GET) | 302 |
-| 3 | Kinde hosted UI | Kinde | provider chooser (GET) | 302 |
+| 1 | `Link href="/sign-in"` click | custom page → `RegisterLink` | `/sign-in` (GET) | 200 custom form |
+| 2 | register handler | SDK `register` | `/api/auth/register?connection_id=...` (GET) | 302 → Kinde |
+| 3 | Kinde authorize | Kinde (Google preselected) | Kinde `/oauth2/auth` (GET) | 302 |
 | 4 | Google account picker | Google | `accounts.google.com` (GET) | 302 |
 | 5 | Google callback | Kinde | Kinde `/oauth2/callback` | — |
 | 6 | Kinde redirect | Kinde | `/api/auth/kinde_callback?code=...` (GET) | 302 after handling |
@@ -196,18 +204,20 @@ Browser ──▶ My App ──▶ Kinde ──▶ Google ──▶ Kinde ──
 ```
 
 1. **Browser → My App**
-   User clicks `LoginLink` (landing) or hits a protected route.
-   `GET /api/auth/login` (App route).
+   User clicks "Sign in"/"Get Started" on the landing page (or hits a protected route).
+   Lands on the custom page `GET /sign-in`. Clicking the Google button fires
+   `GET /api/auth/register?connection_id=...` (App route).
 
 2. **My App → Kinde**
-   `handleAuth()` → SDK `login` handler issues a `302` to
-   `https://nay2002.kinde.com/oauth2/auth?...&redirect_uri=<app callback>&code_challenge=S256...`.
+   `handleAuth()` → SDK `register` handler issues a `302` to
+   `https://nay2002.kinde.com/oauth2/auth?...&redirect_uri=<app callback>&code_challenge=S256&connection_id=...`.
    The `ac-state-key` cookie is set by the SDK for state validation.
 
 3. **Kinde → Google**
-   Kinde renders its hosted page; the user clicks **Google**. Kinde redirects
-   the browser to Google's authorization endpoint with Google's own client id
-   (configured in the Kinde dashboard under *Settings → Authentication → Google*).
+   Kinde renders its authorize page with the **Google** connection preselected
+   (via `connection_id`), then redirects the browser to Google's authorization
+   endpoint with Google's own client id (configured in the Kinde dashboard under
+   *Settings → Authentication → Google*).
 
 4. **Google (user interaction)**
    The user selects an account on `accounts.google.com` and consents to the
@@ -484,19 +494,20 @@ Kinde's user object (from the ID token) typically includes:
 - **`proxy.ts`** (repo root). It is the Next.js middleware:
   ```ts
   export default withAuth(async function proxy() {}, {
-    publicPaths: ["/", "/api/upstash/trigger", "/api/workflow/live-chat"],
+    publicPaths: ["/", "/api/auth", "/api/upstash/trigger", "/api/workflow/live-chat"],
+    loginPage: "/sign-in",
   });
   export const config = {
     matcher: ["/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)"],
   };
   ```
 - `withAuth` is the SDK's middleware; it calls the SDK's session check
-  (`isAuthenticated()`) and enforces `publicPaths`.
+  (`isAuthenticated()`) and enforces `publicPaths`. Unauthenticated users are
+  redirected to `loginPage` (`/sign-in`).
 
 ### What happens if a user is not authenticated
-- **Page routes:** `withAuth` issues a `302` redirect to
-  `/api/auth/login?post_login_redirect_url=<original-route>` (the SDK builds this
-  using the middleware's `login` route). After login the user is returned to
+- **Page routes:** `withAuth` issues a `302` redirect to the custom login page
+  `/sign-in` (the SDK's `loginPage` option). After login the user is returned to
   where they were going.
 - **API routes:** the API routes **re-check auth server-side** (defense in
   depth) via `getAuthenticatedUser()`:
@@ -519,6 +530,7 @@ All auth-related variables (from `.env` / `.env.example`):
 | `KINDE_SITE_URL` | App origin; base for the callback redirect URI | SDK builds `redirectURL = ${KINDE_SITE_URL}/api/auth/kinde_callback` | `handleAuth()` throws `env variable 'KINDE_SITE_URL' is not set`; callback mismatches |
 | `KINDE_POST_LOGIN_REDIRECT_URL` | Destination after successful login (`http://localhost:3000/workflow`) | SDK `login`/`callback` redirect target | User lands on a default/root route instead of the dashboard |
 | `KINDE_POST_LOGOUT_REDIRECT_URL` | Destination after logout (`http://localhost:3000/`) | `LogoutLink` → `/api/auth/logout` → Kinde `/logout` | Post-logout redirect falls back to SDK default |
+| `KINDE_GOOGLE_CONNECTION_ID` | Kinde Google connection id (e.g. `conn_019e...`) | Passed as `connection_id` by `RegisterLink` on `/sign-in` to preselect Google | Sign-in page falls back to Kinde's connection chooser (extra click) |
 | `UPSTASH_REDIS_REST_URL` | Redis endpoint for the user cache + rate limiting | `lib/auth-cache.ts`, `lib/rate-limit.ts`, `lib/redis.ts` | Auth cache disabled (falls back to direct Kinde calls); rate limit falls back to in-memory |
 | `UPSTASH_REDIS_REST_TOKEN` | Redis auth token | same as above | Same as above (graceful fallback) |
 
@@ -546,8 +558,8 @@ sequenceDiagram
     participant K as Kinde
     participant G as Google
 
-    U->>B: Click "Sign in" (LoginLink)
-    B->>A: GET /api/auth/login
+    U->>B: Click "Sign in" (Link → /sign-in, then RegisterLink)
+    B->>A: GET /api/auth/register?connection_id=...
     A->>K: 302 → /oauth2/auth?client_id&redirect_uri&state&code_challenge
     Note over A,K: SDK sets ac-state-key cookie (OAuth state)
     K->>G: 302 → Google authorize (account chooser)
@@ -595,7 +607,7 @@ sequenceDiagram
     alt valid session
         M-->>B: allow request
     else no/invalid session
-        M-->>B: 302 → /api/auth/login?post_login_redirect_url=...
+        M-->>B: 302 → /sign-in (loginPage)
     end
 
     B->>A: GET /api/workflow
@@ -639,13 +651,15 @@ sequenceDiagram
 
 | File | Responsibility | Exports | Connects to |
 |---|---|---|---|
-| `app/api/auth/[kindeAuth]/route.ts` | Single entry point for **all** auth routes (login, register, callback, logout, …) | `GET = handleAuth()` | Kinde SDK `handleAuth()`; invoked by `LoginLink`/`LogoutLink`/middleware redirects |
-| `proxy.ts` (repo root) | Next.js middleware; guards all non-public routes | default `withAuth()` + `config` | Kinde SDK `withAuth`; redirects unauthenticated traffic to `/api/auth/login` |
+| `app/api/auth/[kindeAuth]/route.ts` | Single entry point for **all** auth routes (login, register, callback, logout, …) | `GET = handleAuth()` | Kinde SDK `handleAuth()`; invoked by `RegisterLink`/`LogoutLink`/middleware redirects |
+| `proxy.ts` (repo root) | Next.js middleware; guards all non-public routes | default `withAuth()` + `config` | Kinde SDK `withAuth`; redirects unauthenticated traffic to `/sign-in` (`loginPage`)
 | `lib/auth-cache.ts` | Redis-cached user lookup to reduce Kinde calls | `getCachedUser()`, `buildSessionKey()` (internal) | `redis` (`lib/redis.ts`), Kinde `getKindeServerSession()`; consumed by `lib/api-utils.ts` |
 | `lib/api-utils.ts` | Shared API auth guards + HTTP responses | `getAuthenticatedUser()`, `unauthorizedResponse()`, `serverErrorResponse()`, `maxDuration` | `lib/auth-cache.ts`; used by all `/api/workflow*` routes |
 | `lib/redis.ts` | Upstash Redis client singleton | `redis` | Used by `lib/auth-cache.ts`, `lib/rate-limit.ts`, `lib/realtime.ts`, `lib/cancel.ts` |
 | `app/layout.tsx` | Root layout; mounts client auth provider | `KindeProvider` (line 31), `QueryProvider`, `ThemeProvider` | `@kinde-oss/kinde-auth-nextjs` `KindeProvider`; wraps the whole app |
-| `app/(routes)/(landing)/page.tsx` | Public landing page with login CTAs | React component | `LoginLink` → `/api/auth/login` |
+| `app/(routes)/(landing)/page.tsx` | Public landing page with login CTAs | React component | `Link` → `/sign-in` (custom login page) |
+| `app/(routes)/(landing)/sign-in/page.tsx` | Custom sign-in/sign-up page | React component | renders `<SignInForm>` with `KINDE_GOOGLE_CONNECTION_ID` |
+| `app/(routes)/(landing)/sign-in/sign-in-form.tsx` | Sign-in form (Sign in / Sign up toggle) | `SignInForm` (client) | `RegisterLink` → `/api/auth/register?connection_id=...` |
 | `app/(routes)/(dashboard)/_common/header.tsx` | Dashboard header; shows user + logout menu | `AppHeader` component | `useKindeBrowserClient()` for `user`; `LogoutLink` → `/api/auth/logout` |
 | `app/(routes)/(dashboard)/layout.tsx` | Dashboard layout shell | `DashboardLayout` | renders `AppHeader` + `AppSideBar` inside protected group |
 | `app/(routes)/(dashboard)/workflow/page.tsx` | Protected workflow list page | React component | calls `useGetWorkflows()` → `GET /api/workflow` |
@@ -710,8 +724,9 @@ App httpOnly cookies: user, id_token, access_token, refresh_token, *_payload
 
 | URL | Method | Headers | Body | Response | Redirect | Cookies | Purpose |
 |---|---|---|---|---|---|---|---|
-| `/api/auth/login` | GET | — | — | 302 | `https://nay2002.kinde.com/oauth2/auth?...` | `Set-Cookie: ac-state-key` | Begin OAuth login |
-| `https://nay2002.kinde.com/oauth2/auth` | GET | — | — | 302 | Google authorize URL | — | Kinde hosted login → provider |
+| `/sign-in` | GET | — | — | 200 | — | — | Custom sign-in/sign-up page |
+| `/api/auth/register` | GET | — | query: `post_login_redirect_url`, `connection_id` | 302 | `https://nay2002.kinde.com/oauth2/auth?...` | `Set-Cookie: ac-state-key` | Begin OAuth sign-up (Google preselected) |
+| `https://nay2002.kinde.com/oauth2/auth` | GET | — | — | 302 | Google authorize URL | — | Kinde authorize (Google preselected via `connection_id`) |
 | `accounts.google.com/o/oauth2/...` | GET | — | — | 302 | Kinde `/oauth2/callback` | — | Google account chooser |
 | Kinde `/oauth2/callback` | GET | — | — | 302 | `/api/auth/kinde_callback?code=...` | — | Kinde→app callback |
 | `/api/auth/kinde_callback` | GET | — | query: `code`, `state` | 302 | `/workflow` (post-login URL) | `Set-Cookie: user, id_token, access_token, refresh_token, *_payload` | Exchange code, create session |
@@ -733,7 +748,7 @@ custom error handling for these:
 |---|---|
 | **Missing env vars** (`KINDE_ISSUER_URL`, `KINDE_CLIENT_ID`, `KINDE_CLIENT_SECRET`, `KINDE_SITE_URL`) | `handleAuth()` throws immediately at startup with explicit messages (e.g. `The environment variable 'KINDE_ISSUER_URL' is required.`) — any `/api/auth/*` route 500s. |
 | **Invalid / mismatched callback** (Kinde redirect URI doesn't match `KINDE_SITE_URL` + `/api/auth/kinde_callback`) | Kinde refuses the redirect (its own error screen); or, if `code` is wrong, the token exchange at `/oauth2/token` fails and the SDK callback handler errors out. No user is created; no cookies are set. |
-| **Expired session** (tokens past `expires_in`, refresh token still valid) | SDK attempts refresh via `refreshTokensServerAction`. If refresh succeeds, session continues; if it fails, middleware `isAuthenticated()` returns false → redirect to `/api/auth/login?post_login_redirect_url=...`. API routes return `401` via `getAuthenticatedUser() === null`. |
+| **Expired session** (tokens past `expires_in`, refresh token still valid) | SDK attempts refresh via `refreshTokensServerAction`. If refresh succeeds, session continues; if it fails, middleware `isAuthenticated()` returns false → redirect to `/sign-in`. API routes return `401` via `getAuthenticatedUser() === null`. |
 | **Revoked session** (user deleted/suspended in Kinde, tokens revoked) | `/oauth2/token` refresh and/or userinfo fails; same as expired → login redirect / `401`. |
 | **Invalid client secret** | Token exchange POST to `/oauth2/token` returns an OAuth error; SDK callback fails; no session cookies set; user not logged in. |
 | **Callback mismatch** (state parameter missing/mismatched) | The SDK validates `state` against the `ac-state-key` cookie and aborts the flow (security measure); no session created. |
@@ -751,7 +766,7 @@ custom error handling for these:
 - **Client secret stays server-side:** the token exchange
   (`POST /oauth2/token`) is performed by the SDK inside the server-side API route
   (`/api/auth/kinde_callback`). The client secret is never sent to the browser or
-  embedded in client bundles — `LoginLink`/client code only uses `client_id`.
+  embedded in client bundles — `RegisterLink`/client code only uses `client_id`.
 - **CSRF protection:** session cookies use `sameSite: "lax"`. Login also uses an
   OAuth `state` value stored in the `ac-state-key` cookie and validated by the SDK
   on the callback, preventing login CSRF.
@@ -775,12 +790,13 @@ custom error handling for these:
 `@kinde-oss/kinde-auth-nextjs@2.12.2`. There is exactly **one** auth route file
 (`app/api/auth/[kindeAuth]/route.ts` → `handleAuth()`) that serves login, register,
 callback, and logout; one middleware (`proxy.ts` → `withAuth`) that protects every
-route except `/`, `/api/upstash/trigger`, and `/api/workflow/live-chat`; and shared
-guards in `lib/api-utils.ts` (`getAuthenticatedUser()`) backed by an optional
+route except `/`, `/api/auth`, `/api/upstash/trigger`, and `/api/workflow/live-chat`,
+redirecting unauthenticated users to the **custom `/sign-in` page** (`loginPage`); and
+shared guards in `lib/api-utils.ts` (`getAuthenticatedUser()`) backed by an optional
 60-second Redis user cache (`lib/auth-cache.ts`).
 
 The flow is a standard **OAuth 2.0 Authorization Code + PKCE (S256)** exchange:
-`LoginLink` → `/api/auth/login` → Kinde hosted screen → Google account chooser →
+`RegisterLink` → `/api/auth/register?connection_id=...` → Kinde (Google preselected) → Google account chooser →
 Kinde → `/api/auth/kinde_callback` → SDK exchanges the code server-side with
 `client_id` + `client_secret` + `code_verifier` → SDK writes httpOnly
 `kinde_*` session cookies (`user`, `id_token`, `access_token`, `refresh_token`)

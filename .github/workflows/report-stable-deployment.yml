@@ -1,0 +1,72 @@
+name: Report stable deployment URL
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  report:
+    name: Report stable URL to GitHub
+    runs-on: ubuntu-latest
+    if: github.event.deployment_status.state == 'success'
+    steps:
+      - name: Skip our own status (loop guard)
+        id: guard
+        run: |
+          DESCRIPTION="${{ github.event.deployment_status.description }}"
+          if [[ "$DESCRIPTION" == STABLE_URL:* ]]; then
+            echo "This status was posted by this workflow, skipping to avoid a loop"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Debug deployment event values
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          echo "deployment.id:          ${{ github.event.deployment.id }}"
+          echo "deployment.ref:         ${{ github.event.deployment.ref }}"
+          echo "deployment.sha:         ${{ github.event.deployment.sha }}"
+          echo "deployment.environment: ${{ github.event.deployment.environment }}"
+          echo "deployment_status.state:        ${{ github.event.deployment_status.state }}"
+          echo "deployment_status.description:  ${{ github.event.deployment_status.description }}"
+          echo "deployment_status.environment_url: ${{ github.event.deployment_status.environment_url }}"
+
+      - name: Match deployment to qa or main branch
+        id: resolve
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          SHA="${{ github.event.deployment.ref }}"
+          BRANCHES="$(gh api repos/${{ github.repository }}/commits/$SHA/branches-where-head --jq -r '.[].name')"
+          echo "Deployment SHA $SHA is the head of: ${BRANCHES:-<none>}"
+          if echo "$BRANCHES" | grep -qx 'qa'; then
+            echo "env_name=preview" >> "$GITHUB_OUTPUT"
+            echo "stable_url=https://workflow-mcp-git-qa-nay1.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "resolved=true" >> "$GITHUB_OUTPUT"
+          elif echo "$BRANCHES" | grep -qx 'main'; then
+            echo "env_name=Production" >> "$GITHUB_OUTPUT"
+            echo "stable_url=https://workflow-mcp-drab.vercel.app" >> "$GITHUB_OUTPUT"
+            echo "resolved=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Deployment $SHA is not the head of qa or main; skipping"
+            echo "resolved=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Post stable URL as latest deployment status
+        if: steps.guard.outputs.skip == 'false' && steps.resolve.outputs.resolved == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DEPLOYMENT_ID="${{ github.event.deployment.id }}"
+          STABLE_URL="${{ steps.resolve.outputs.stable_url }}"
+          gh api --method POST \
+            "repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
+            -f state=success \
+            -f environment_url="$STABLE_URL" \
+            -f target_url="$STABLE_URL" \
+            -f description="STABLE_URL: $STABLE_URL"
