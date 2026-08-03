@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/dagre": "^0.7.54",
     "@types/mustache": "^4.2.6",
@@ -82,11 +82,11 @@
     "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9",
     "eslint-config-next": "^16.2.12",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "patch-package": "^8.0.1",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   }
 }
