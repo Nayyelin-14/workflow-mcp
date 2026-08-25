@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LoginLink, RegisterLink } from "@kinde-oss/kinde-auth-nextjs";
+import { LoginLink, RegisterLink, useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import {
   Eye,
   EyeOff,
@@ -46,6 +46,7 @@ export function SignInForm({
   googleConnectionId?: string;
 }) {
   const [showPassword, setShowPassword] = useState(false);
+  const { login } = useKindeBrowserClient();
 
   return (
     <Card className="w-full max-w-sm border-border/60 bg-card/60 py-6 shadow-xl shadow-foreground/5 backdrop-blur-sm sm:py-8">
@@ -115,13 +116,19 @@ export function SignInForm({
             </button>
           </div>
 
-          <Button asChild size="lg" variant="secondary" className="h-11 w-full gap-2.5 rounded-lg">
-            <LoginLink
-              postLoginRedirectURL="/workflow"
-              authUrlParams={{ connection_id: "conn_019e87be649bb1fddb7981f3f7a398dc" }}
-            >
-              Sign in with email &amp; password
-            </LoginLink>
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            className="h-11 w-full gap-2.5 rounded-lg"
+            onClick={() =>
+              login({
+                connection_id: "conn_019e87be649bb1fddb7981f3f7a398dc",
+                postLoginRedirectURL: "/workflow",
+              } as never)
+            }
+          >
+            Sign in with email &amp; password
           </Button>
         </form>
 
