@@ -9,7 +9,25 @@ Flowagent.ai is an open-source visual AI workflow builder that lets you create m
 
 **Try it live:** [https://workflow-mcp-drab.vercel.app/](https://workflow-mcp-drab.vercel.app/)
 
+Sign in with the shared demo account (email + password — no Google needed):
+
+| | |
+|---|---|
+| **URL** | https://workflow-mcp-drab.vercel.app/ |
+| **Email** | `demo@flowagent-demo.com` |
+| **Password** | `FlowagentDemo2026!` |
+
 > ⚠️ This is a shared public demo account — please don't change its password or delete existing workflows.
+
+### What you can try (MVP walkthrough)
+
+1. **Dashboard** — see your saved workflows (`/workflow`).
+2. **Create a workflow** — click *New workflow*, give it a name, and open the canvas editor.
+3. **Build visually** — drag **Start → Agent → If/Else / HTTP → End** nodes onto the React Flow canvas; wire them together and reference upstream outputs with `{{variable}}` syntax.
+4. **Run it live** — open the **AI chat preview** panel and send a message; the workflow executes through Upstash QStash and streams each node's progress in real time.
+5. **MCP tools** — register a remote MCP server (API key stored encrypted at rest) and use its tools inside Agent nodes.
+
+Screenshots of each step live in [`docs/screenshots/`](./docs/screenshots).
 
 ## Key Features
 
