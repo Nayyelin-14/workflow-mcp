@@ -1,4 +1,4 @@
-import { streamAgentAction, generateAgentText } from "@/app/actions/agent-workflow";
+import { streamAgentAction, generateAgentText, SelectedTool } from "@/app/actions/agent-workflow";
 import { MODELS } from "@/lib/constants";
 import { openrouter } from "@/lib/openrouter";
 import { replacesdVariables } from "@/lib/helper";
@@ -52,10 +52,7 @@ export const ExecuteAgentNode = async (
     history,
     jsonOutput,
     signal,
-    selectedTools: selectedTools as Array<
-      | { type: "native"; value: string }
-      | { type: "mcp"; value: string; tools: [] }
-    >,
+    selectedTools: selectedTools as SelectedTool[],
   });
   // const result = {
   //   // The full text - await to get complete response
@@ -203,10 +200,7 @@ export const ExecuteAgentNode = async (
         history,
         jsonOutput,
         signal,
-        selectedTools: selectedTools as Array<
-          | { type: "native"; value: string }
-          | { type: "mcp"; value: string; tools: [] }
-        >,
+        selectedTools: selectedTools as SelectedTool[],
       });
       console.log(`[Agent] generateAgentText result: "${fullText}"`);
     } catch (e) {
