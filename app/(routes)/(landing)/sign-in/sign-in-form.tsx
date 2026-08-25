@@ -1,7 +1,15 @@
 "use client";
 
-import { RegisterLink } from "@kinde-oss/kinde-auth-nextjs";
-import { Lock, ShieldCheck, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { LoginLink, RegisterLink } from "@kinde-oss/kinde-auth-nextjs";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,7 +40,13 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export function SignInForm({ googleConnectionId }: { googleConnectionId?: string }) {
+export function SignInForm({
+  googleConnectionId,
+}: {
+  googleConnectionId?: string;
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <Card className="w-full max-w-sm border-border/60 bg-card/60 py-6 shadow-xl shadow-foreground/5 backdrop-blur-sm sm:py-8">
       <CardHeader className="items-center gap-1.5 text-center">
@@ -45,7 +59,12 @@ export function SignInForm({ googleConnectionId }: { googleConnectionId?: string
       </CardHeader>
 
       <CardContent className="flex flex-col gap-5">
-        <Button asChild size="lg" variant="outline" className="h-11 w-full gap-2.5 rounded-lg">
+        <Button
+          asChild
+          size="lg"
+          variant="outline"
+          className="h-11 w-full gap-2.5 rounded-lg"
+        >
           <RegisterLink
             postLoginRedirectURL="/workflow"
             authUrlParams={
@@ -56,6 +75,52 @@ export function SignInForm({ googleConnectionId }: { googleConnectionId?: string
             Continue with Google
           </RegisterLink>
         </Button>
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            or
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <form className="flex flex-col gap-3">
+          <div className="relative">
+            <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              className="h-11 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary"
+            />
+          </div>
+
+          <div className="relative">
+            <Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              autoComplete="current-password"
+              placeholder="Password"
+              className="h-11 w-full rounded-lg border border-border bg-background pl-9 pr-10 text-sm outline-none transition-colors focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+
+          <Button asChild size="lg" variant="secondary" className="h-11 w-full gap-2.5 rounded-lg">
+            <LoginLink postLoginRedirectURL="/workflow">
+              Sign in with email &amp; password
+            </LoginLink>
+          </Button>
+        </form>
 
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
