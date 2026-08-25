@@ -129,8 +129,31 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
                 const hasSteps = msg.parts.some(
                   (p) => p.type === "data-workflow-Node",
                 );
+                // A reply counts as "text" if the chat got a real text part, OR if an
+                // agent node streamed text output to a workflow-node card.
                 const hasText = msg.parts.some(
-                  (p) => p.type === "text" && Boolean(p.text),
+                  (p) =>
+                    (p.type === "text" && Boolean(p.text)) ||
+                    (p.type === "data-workflow-Node" &&
+                      (p as { data?: { type?: string; output?: unknown } }).data
+                        ?.type === "text" &&
+                      Boolean(
+                        (p as { data?: { output?: unknown } }).data?.output,
+                      )),
+                );
+                // Collect every tool the workflow actually called (from tool-result cards)
+                // so the user can see what was invoked after the run finishes.
+                const calledTools = Array.from(
+                  new Set(
+                    msg.parts
+                      .filter((p) => p.type === "data-workflow-Node")
+                      .map(
+                        (p) =>
+                          (p as { data?: { toolResult?: { name?: string } } })
+                            .data?.toolResult?.name,
+                      )
+                      .filter((name): name is string => Boolean(name)),
+                  ),
                 );
                 const isThisMessageStreaming =
                   status === "streaming" &&
@@ -164,10 +187,26 @@ const ChatPanel = ({ workflowId }: { workflowId: string }) => {
                         hasSteps &&
                         !hasText && (
                           <p className="px-1 py-1 text-sm text-muted-foreground italic">
-                            This run finished without sending any text back
-                            to the user — connect an Agent or set a message
-                            on the End node to produce a reply.
+                            This run finished without sending any text back to
+                            the user — connect an Agent or set a message on the
+                            End node to produce a reply.
                           </p>
+                        )}
+                      {msg.role === "assistant" &&
+                        !isThisMessageStreaming &&
+                        hasSteps &&
+                        calledTools.length > 0 && (
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1">
+                            {calledTools.map((tool) => (
+                              <span
+                                key={tool}
+                                className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-xs font-medium text-foreground/80"
+                              >
+                                <Check className="size-3 text-green-500" />
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
                         )}
                     </MessageContent>
                   </Message>
@@ -259,7 +298,8 @@ export const NodeDisplay = ({ data, streamEnded }: NodeDisplayDataType) => {
   if (!nodeConfig) return null;
   const Icon = nodeConfig.icon;
   const { status, output, error, toolCall, toolResult } = data;
-  const effectiveStatus = streamEnded && status === "loading" ? "complete" : status;
+  const effectiveStatus =
+    streamEnded && status === "loading" ? "complete" : status;
 
   const summary = summarizeOutput(output);
   const showRawOutput = output != null && !summary;
