@@ -6,6 +6,12 @@ on:
   # duplicate post-merge push run is intentionally omitted.
   pull_request:
     branches: [qa, main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE'
 
 permissions:
   contents: read
