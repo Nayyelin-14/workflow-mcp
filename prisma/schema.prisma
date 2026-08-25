@@ -21,3 +21,16 @@ model Workflow {
   @@index([userId, createdAt])
   @@unique([userId, name])
 }
+
+
+model McpServer{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  url String 
+  userId String 
+  token String
+  label  String
+
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

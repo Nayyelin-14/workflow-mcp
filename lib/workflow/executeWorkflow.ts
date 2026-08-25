@@ -155,6 +155,9 @@ export const executeWorkflow = async (
           nodeName: node?.data.label,
           status: "complete",
           ...(outputText ? { output: outputText } : {}),
+          ...(typeof outputText === "string" && outputText.trim()
+            ? { type: "text" }
+            : {}),
         },
       });
 
