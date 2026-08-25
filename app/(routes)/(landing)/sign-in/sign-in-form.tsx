@@ -118,7 +118,7 @@ export function SignInForm({
           <Button asChild size="lg" variant="secondary" className="h-11 w-full gap-2.5 rounded-lg">
             <LoginLink
               postLoginRedirectURL="/workflow"
-              authUrlParams={{ connection_id: "password" }}
+              authUrlParams={{ connection_id: "conn_019e87be649bb1fddb7981f3f7a398dc" }}
             >
               Sign in with email &amp; password
             </LoginLink>
