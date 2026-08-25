@@ -5,17 +5,9 @@ Flowagent.ai is an open-source visual AI workflow builder that lets you create m
 ![Flowagent.ai canvas](./docs/images/screenshot.png)
 <!-- TODO: replace with an actual screenshot or demo GIF of the canvas -->
 
-## 🔓 Live Demo & Test Account
+## 🔓 Live Demo
 
 **Try it live:** [https://workflow-mcp-drab.vercel.app/](https://workflow-mcp-drab.vercel.app/)
-
-Sign in with the shared demo/test account:
-
-| | |
-|---|---|
-| **URL** | https://workflow-mcp-drab.vercel.app/ |
-| **Email** | `demo@flowagent-ai.com` |
-| **Password** | `FlowagentDemo2026!` |
 
 > ⚠️ This is a shared public demo account — please don't change its password or delete existing workflows.
 
