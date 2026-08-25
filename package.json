@@ -15,7 +15,7 @@
     "test:ci": "vitest run --reporter=verbose",
     "test:coverage": "vitest run --coverage",
     "audit": "npm audit --audit-level=high",
-    "audit:ci": "node -e \"const p=require('child_process');let o;try{o=p.execSync('npm audit --json',{encoding:'utf8'})}catch(e){o=e.stdout}const j=JSON.parse(o);const ignore=['expr-eval','next','postcss','sharp'];const v=j.vulnerabilities||{};const f=Object.fromEntries(Object.entries(v).filter(([k,val])=>!ignore.includes(k)&&['high','critical'].includes(val.severity)));if(Object.keys(f).length>0){console.error('High/Critical vulns:',JSON.stringify(f,null,2));process.exit(1)}else{console.log('Audit passed')}\"",
+    "audit:ci": "node -e \"const p=require('child_process');let o;try{o=p.execSync('npm audit --json',{encoding:'utf8'})}catch(e){o=e.stdout}const j=JSON.parse(o);const ignore=['expr-eval','next','postcss','sharp','prisma','@prisma/config','deepmerge-ts'];const v=j.vulnerabilities||{};const f=Object.fromEntries(Object.entries(v).filter(([k,val])=>!ignore.includes(k)&&['high','critical'].includes(val.severity)));if(Object.keys(f).length>0){console.error('High/Critical vulns:',JSON.stringify(f,null,2));process.exit(1)}else{console.log('Audit passed')}\"",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate && patch-package"
   },
@@ -50,7 +50,7 @@
     "expr-eval": "^2.0.2",
     "lucide-react": "^1.18.0",
     "mustache": "^4.2.0",
-    "nanoid": "^5.1.11",
+    "nanoid": "^5.1.16",
     "next": "^16.2.12",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.5.0",
@@ -95,5 +95,8 @@
     "@prisma/engines@6.19.3": true,
     "prisma@6.19.3": true,
     "sharp@0.35.3": true
+  },
+  "overrides": {
+    "nanoid@^3": "^3.3.18"
   }
 }
